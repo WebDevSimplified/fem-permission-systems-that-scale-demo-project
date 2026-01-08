@@ -18,25 +18,25 @@ async function seed() {
       // Engineering Department
       {
         email: "admin.eng@example.com",
-        name: "Alice Admin",
+        name: "Alice",
         role: "admin",
         department: "Engineering",
       },
       {
         email: "author.eng@example.com",
-        name: "Bob Author",
+        name: "Bob",
         role: "author",
         department: "Engineering",
       },
       {
         email: "editor.eng@example.com",
-        name: "Charlie Editor",
+        name: "Charlie",
         role: "editor",
         department: "Engineering",
       },
       {
         email: "viewer.eng@example.com",
-        name: "Diana Viewer",
+        name: "Diana",
         role: "viewer",
         department: "Engineering",
       },
@@ -44,25 +44,25 @@ async function seed() {
       // Marketing Department
       {
         email: "admin.marketing@example.com",
-        name: "Eve Admin",
+        name: "Eve",
         role: "admin",
         department: "Marketing",
       },
       {
         email: "author.marketing@example.com",
-        name: "Frank Author",
+        name: "Frank",
         role: "author",
         department: "Marketing",
       },
       {
         email: "editor.marketing@example.com",
-        name: "Grace Editor",
+        name: "Grace",
         role: "editor",
         department: "Marketing",
       },
       {
         email: "viewer.marketing@example.com",
-        name: "Henry Viewer",
+        name: "Henry",
         role: "viewer",
         department: "Marketing",
       },
@@ -81,8 +81,7 @@ async function seed() {
       // Engineering Projects
       {
         name: "API Documentation",
-        description:
-          "Technical documentation for our REST API - Engineering only",
+        description: "Technical documentation for our REST API",
         ownerId: getUser("admin.eng@example.com").id,
         department: "Engineering",
       },
@@ -129,7 +128,7 @@ async function seed() {
       // API Documentation Project - Various states for permission testing
       {
         title: "Getting Started Guide",
-        content: "# Getting Started\n\nWelcome to our API...",
+        content: "Getting Started\n\nWelcome to our API...",
         status: "published",
         isLocked: false,
         projectId: getProject("API Documentation").id,
@@ -137,8 +136,8 @@ async function seed() {
         lastEditedById: getUser("editor.eng@example.com").id,
       },
       {
-        title: "Authentication Flow (Draft)",
-        content: "# Authentication\n\nWork in progress...",
+        title: "Authentication Flow",
+        content: "Authentication\n\nWork in progress...",
         status: "draft",
         isLocked: false,
         projectId: getProject("API Documentation").id,
@@ -146,8 +145,8 @@ async function seed() {
         lastEditedById: getUser("author.eng@example.com").id,
       },
       {
-        title: "API v1 Reference (Archived)",
-        content: "# API v1\n\nDeprecated - use v2 instead",
+        title: "API v1 Reference",
+        content: "API v1\n\nDeprecated - use v2 instead",
         status: "archived",
         isLocked: true,
         projectId: getProject("API Documentation").id,
@@ -155,8 +154,8 @@ async function seed() {
         lastEditedById: getUser("admin.eng@example.com").id,
       },
       {
-        title: "Endpoints Reference",
-        content: "# Endpoints\n\nList of all API endpoints...",
+        title: "API v2 Reference",
+        content: "API v2\n\nList of all API endpoints...",
         status: "published",
         isLocked: true, // Published but locked for editing
         projectId: getProject("API Documentation").id,
@@ -167,7 +166,7 @@ async function seed() {
       // System Architecture Project
       {
         title: "Database Schema Design",
-        content: "# Database Design\n\nOur PostgreSQL schema...",
+        content: "Database Design\n\nOur PostgreSQL schema...",
         status: "draft",
         isLocked: false,
         projectId: getProject("System Architecture").id,
@@ -176,7 +175,7 @@ async function seed() {
       },
       {
         title: "Microservices Overview",
-        content: "# Microservices\n\nOur service architecture...",
+        content: "Microservices\n\nOur service architecture...",
         status: "published",
         isLocked: false,
         projectId: getProject("System Architecture").id,
@@ -187,7 +186,7 @@ async function seed() {
       // Brand Guidelines Project
       {
         title: "Logo Usage",
-        content: "# Logo Guidelines\n\nHow to use our logo...",
+        content: "Logo Guidelines\n\nHow to use our logo...",
         status: "published",
         isLocked: false,
         projectId: getProject("Brand Guidelines").id,
@@ -196,7 +195,7 @@ async function seed() {
       },
       {
         title: "Color Palette",
-        content: "# Colors\n\nPrimary: #FF6B6B...",
+        content: "Colors\n\nPrimary: #FF6B6B...",
         status: "published",
         isLocked: true,
         projectId: getProject("Brand Guidelines").id,
@@ -204,8 +203,8 @@ async function seed() {
         lastEditedById: getUser("admin.marketing@example.com").id,
       },
       {
-        title: "Typography Guide (Draft)",
-        content: "# Typography\n\nFonts and text styles...",
+        title: "Typography Guide",
+        content: "Typography\n\nFonts and text styles...",
         status: "draft",
         isLocked: false,
         projectId: getProject("Brand Guidelines").id,
@@ -216,7 +215,7 @@ async function seed() {
       // Campaign Plans Project
       {
         title: "Q1 2026 Campaign",
-        content: "# Q1 Campaign\n\nGoals and strategies...",
+        content: "Q1 Campaign\n\nGoals and strategies...",
         status: "published",
         isLocked: false,
         projectId: getProject("Campaign Plans").id,
@@ -225,7 +224,7 @@ async function seed() {
       },
       {
         title: "Q4 2025 Retrospective",
-        content: "# Q4 Results\n\nWhat went well...",
+        content: "Q4 Results\n\nWhat went well...",
         status: "archived",
         isLocked: false,
         projectId: getProject("Campaign Plans").id,
@@ -234,7 +233,7 @@ async function seed() {
       },
       {
         title: "Social Media Strategy",
-        content: "# Social Media\n\nPlatform-specific tactics...",
+        content: "Social Media\n\nPlatform-specific tactics...",
         status: "published",
         isLocked: false,
         projectId: getProject("Campaign Plans").id,
@@ -242,8 +241,8 @@ async function seed() {
         lastEditedById: getUser("editor.marketing@example.com").id,
       },
       {
-        title: "Email Campaign Templates (Draft)",
-        content: "# Email Templates\n\nReusable email designs...",
+        title: "Email Campaign Templates",
+        content: "Email Templates\n\nReusable email designs...",
         status: "draft",
         isLocked: false,
         projectId: getProject("Campaign Plans").id,
@@ -254,7 +253,7 @@ async function seed() {
       // Company Wiki - Cross-department
       {
         title: "Company History",
-        content: "# Our Story\n\nFounded in 2020...",
+        content: "Our Story\n\nFounded in 2020...",
         status: "published",
         isLocked: false,
         projectId: getProject("Company Wiki").id,
@@ -263,7 +262,7 @@ async function seed() {
       },
       {
         title: "Office Locations",
-        content: "# Offices\n\nSan Francisco, New York, London...",
+        content: "Offices\n\nSan Francisco, New York, London...",
         status: "published",
         isLocked: false,
         projectId: getProject("Company Wiki").id,
@@ -271,8 +270,8 @@ async function seed() {
         lastEditedById: getUser("editor.marketing@example.com").id,
       },
       {
-        title: "Team Directory (Draft)",
-        content: "# Directory\n\nWho's who in the company...",
+        title: "Team Directory",
+        content: "Directory\n\nWho's who in the company...",
         status: "draft",
         isLocked: false,
         projectId: getProject("Company Wiki").id,
@@ -280,8 +279,8 @@ async function seed() {
         lastEditedById: getUser("author.eng@example.com").id,
       },
       {
-        title: "FAQ (Archived)",
-        content: "# FAQ\n\nOld frequently asked questions...",
+        title: "FAQ",
+        content: "FAQ\n\nOld frequently asked questions...",
         status: "archived",
         isLocked: true,
         projectId: getProject("Company Wiki").id,

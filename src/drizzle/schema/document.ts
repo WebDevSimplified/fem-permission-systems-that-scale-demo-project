@@ -11,9 +11,9 @@ export const documentStatusEnum = pgEnum("document_status", documentStatuses)
 export const DocumentTable = pgTable("documents", {
   id,
   title: text().notNull(),
-  content: text().notNull().default(""),
+  content: text().notNull(),
   status: documentStatusEnum().notNull().default("draft"),
-  isLocked: boolean().notNull().default(false), // Prevents editing even by authorized users
+  isLocked: boolean().notNull().default(false),
   projectId: uuid()
     .notNull()
     .references(() => ProjectTable.id, { onDelete: "cascade" }),
@@ -43,3 +43,6 @@ export const DocumentRelationships = relations(DocumentTable, ({ one }) => ({
     relationName: "documentLastEditor",
   }),
 }))
+
+export type Document = typeof DocumentTable.$inferSelect
+export type DocumentInsertData = typeof DocumentTable.$inferInsert

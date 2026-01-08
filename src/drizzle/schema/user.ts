@@ -23,3 +23,6 @@ export const UserRelationships = relations(UserTable, ({ many }) => ({
   createdDocuments: many(DocumentTable, { relationName: "documentCreator" }),
   editedDocuments: many(DocumentTable, { relationName: "documentLastEditor" }),
 }))
+
+export type User = typeof UserTable.$inferSelect
+export type UserInsertData = typeof UserTable.$inferInsert

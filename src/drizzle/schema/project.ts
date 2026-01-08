@@ -7,7 +7,7 @@ import { DocumentTable } from "./document"
 export const ProjectTable = pgTable("projects", {
   id,
   name: text().notNull(),
-  description: text(),
+  description: text().notNull(),
   ownerId: uuid()
     .notNull()
     .references(() => UserTable.id, { onDelete: "cascade" }),
@@ -26,3 +26,6 @@ export const ProjectRelationships = relations(
     documents: many(DocumentTable),
   }),
 )
+
+export type Project = typeof ProjectTable.$inferSelect
+export type ProjectInsertData = typeof ProjectTable.$inferInsert
