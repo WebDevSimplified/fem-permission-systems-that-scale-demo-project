@@ -5,6 +5,8 @@ import { ArrowLeftIcon } from "lucide-react"
 import { getProjectById } from "@/dal/projects/queries"
 import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
+import { canReadProject } from "@/permissions/projects"
+import { can } from "@/permissions/rbac"
 
 export default async function NewDocumentPage({
   params,
@@ -16,17 +18,12 @@ export default async function NewDocumentPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
+  if (!canReadProject(user, project)) {
     return redirect(`/`)
   }
 
   // PERMISSION:
-  if (user.role !== "author" && user.role !== "admin") {
+  if (!can(user, "document:create")) {
     return redirect(`/projects/${projectId}`)
   }
 

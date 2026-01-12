@@ -6,6 +6,8 @@ import { getProjectById } from "@/dal/projects/queries"
 import { getDocumentById } from "@/dal/documents/queries"
 import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
+import { can } from "@/permissions/rbac"
+import { canReadProject } from "@/permissions/projects"
 
 export default async function EditDocumentPage({
   params,
@@ -20,18 +22,13 @@ export default async function EditDocumentPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
+  if (!canReadProject(user, project)) {
     return redirect(`/`)
   }
 
   // PERMISSION:
-  if (user.role === "viewer") {
-    return redirect(`/projects/${projectId}`)
+  if (!can(user, "document:update")) {
+    return redirect(`/projects/${projectId}/`)
   }
 
   return (

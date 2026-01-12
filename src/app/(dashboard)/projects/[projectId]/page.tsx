@@ -14,6 +14,8 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectById } from "@/dal/projects/queries"
 import { getProjectDocuments } from "@/dal/documents/queries"
 import { getCurrentUser } from "@/lib/session"
+import { can } from "@/permissions/rbac"
+import { canReadProject } from "@/permissions/projects"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -24,12 +26,7 @@ export default async function ProjectDocumentsPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
+  if (!canReadProject(user, project)) {
     return redirect("/")
   }
 
@@ -46,13 +43,13 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {user?.role === "admin" && (
+          {can(user, "project:update") && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>
           )}
           {/* PERMISSION: */}
-          {(user?.role === "author" || user?.role === "admin") && (
+          {can(user, "document:create") && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4" />
@@ -69,7 +66,7 @@ export default async function ProjectDocumentsPage({
             <FileTextIcon className="size-12 text-muted-foreground mb-4" />
             <h2 className="text-lg font-medium">No Documents</h2>
             {/* PERMISSION: */}
-            {(user?.role === "author" || user?.role === "admin") && (
+            {can(user, "document:create") && (
               <>
                 <p className="text-muted-foreground mb-4">
                   Create your first document in this project.

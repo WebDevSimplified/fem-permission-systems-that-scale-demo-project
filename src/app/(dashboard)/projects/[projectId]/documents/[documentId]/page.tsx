@@ -10,6 +10,8 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfo } from "@/dal/documents/queries"
 import { getCurrentUser } from "@/lib/session"
 import { getProjectById } from "@/dal/projects/queries"
+import { can } from "@/permissions/rbac"
+import { canReadProject } from "@/permissions/projects"
 
 export default async function DocumentDetailPage({
   params,
@@ -20,13 +22,13 @@ export default async function DocumentDetailPage({
   const user = await getCurrentUser()
   const project = await getProjectById(projectId)
   if (project == null) return notFound()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
-    return redirect(`/`)
+  if (!canReadProject(user, project)) {
+    return redirect("/")
+  }
+
+  // PERMISSION:
+  if (!can(user, "document:read")) {
+    return redirect(`/projects/${projectId}`)
   }
 
   const document = await getDocumentWithUserInfo(documentId)
@@ -57,9 +59,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {(user?.role === "author" ||
-            user?.role === "editor" ||
-            user?.role === "admin") && (
+          {can(user, "document:update") && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -70,7 +70,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {user?.role === "admin" && (
+          {can(user, "document:delete") && (
             <ActionButton
               variant="destructive"
               requireAreYouSure
