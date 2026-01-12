@@ -8,14 +8,19 @@ import { deleteDocumentAction } from "@/actions/documents"
 import { ArrowLeftIcon, LockIcon, PencilIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfo } from "@/dal/documents/queries"
+import { getCurrentUser } from "@/lib/session"
 
 export default async function DocumentDetailPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/[documentId]">) {
   const { projectId, documentId } = await params
+  // FIX: Not checking permissions
+  // FIX: Not checking if user has access to project
 
   const document = await getDocumentWithUserInfo(documentId)
   if (document == null) return notFound()
+
+  const user = await getCurrentUser()
 
   return (
     <div className="space-y-6">
@@ -41,20 +46,28 @@ export default async function DocumentDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/projects/${projectId}/documents/${documentId}/edit`}>
-              <PencilIcon className="size-4 mr-2" />
-              Edit
-            </Link>
-          </Button>
-          <ActionButton
-            variant="destructive"
-            requireAreYouSure
-            areYouSureDescription="This will permanently delete this document. This action cannot be undone."
-            action={deleteDocumentAction.bind(null, documentId, projectId)}
-          >
-            Delete
-          </ActionButton>
+          {/* PERMISSION */}
+          {(user?.role === "author" || user?.role === "editor") && (
+            <Button variant="outline" asChild>
+              <Link
+                href={`/projects/${projectId}/documents/${documentId}/edit`}
+              >
+                <PencilIcon className="size-4 mr-2" />
+                Edit
+              </Link>
+            </Button>
+          )}
+          {/* PERMISSION */}
+          {user?.role === "admin" && (
+            <ActionButton
+              variant="destructive"
+              requireAreYouSure
+              areYouSureDescription="This will permanently delete this document. This action cannot be undone."
+              action={deleteDocumentAction.bind(null, documentId, projectId)}
+            >
+              Delete
+            </ActionButton>
+          )}
         </div>
       </div>
 

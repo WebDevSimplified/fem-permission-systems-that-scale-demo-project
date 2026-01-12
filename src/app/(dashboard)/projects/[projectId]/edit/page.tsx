@@ -20,8 +20,9 @@ export default async function EditProjectPage({
   const { projectId } = await params
 
   const project = await getProjectById(projectId)
-
   if (project == null) return notFound()
+  // FIX: Not checking permissions
+  // FIX: Not checking if user has access to project
 
   return (
     <div className="space-y-6">
