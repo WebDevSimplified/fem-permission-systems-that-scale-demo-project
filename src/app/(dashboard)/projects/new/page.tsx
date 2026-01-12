@@ -4,6 +4,8 @@ import { ArrowLeftIcon } from "lucide-react"
 import { ProjectForm } from "@/components/project-form"
 
 export default async function NewProjectPage() {
+  // FIX: Not checking permissions
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">

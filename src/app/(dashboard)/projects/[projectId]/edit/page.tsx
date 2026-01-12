@@ -20,8 +20,9 @@ export default async function EditProjectPage({
   const { projectId } = await params
 
   const project = await getProjectById(projectId)
-
   if (project == null) return notFound()
+  // FIX: Not checking permissions
+  // FIX: Not checking if user has access to project
 
   return (
     <div className="space-y-6">
@@ -41,6 +42,7 @@ export default async function EditProjectPage({
       <div className="max-w-2xl space-y-6">
         <ProjectForm project={project} />
 
+        {/* FIX: Missing permission check */}
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Danger Zone</CardTitle>
