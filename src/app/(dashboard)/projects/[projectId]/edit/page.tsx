@@ -12,9 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ProjectForm } from "@/components/project-form"
-import { getCurrentUser } from "@/lib/session"
-import { getProjectByIdService } from "@/services/projects"
 import { getUserPermissions } from "@/permissions/abac"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function EditProjectPage({
   params,
@@ -25,8 +24,7 @@ export default async function EditProjectPage({
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
+  const permissions = await getUserPermissions()
   if (!permissions.can("project", "update", project)) {
     return redirect(`/projects/${projectId}`)
   }

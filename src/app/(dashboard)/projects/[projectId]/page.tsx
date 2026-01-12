@@ -11,10 +11,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, LockIcon, FileTextIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
-import { getCurrentUser } from "@/lib/session"
-import { getProjectByIdService } from "@/services/projects"
-import { getProjectDocumentsService } from "@/services/documents"
 import { getUserPermissions } from "@/permissions/abac"
+import { getProjectDocumentsService } from "@/services/documents"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -23,8 +22,7 @@ export default async function ProjectDocumentsPage({
   const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
+  const permissions = await getUserPermissions()
   const documents = await getProjectDocumentsService(projectId)
 
   return (

@@ -15,17 +15,15 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Project, User } from "@/drizzle/schema"
-import { getUserPermissions } from "@/permissions/abac"
+import { Project } from "@/drizzle/schema"
 
 type AppSidebarProps = {
   projects: Pick<Project, "id" | "name" | "department">[]
-  user: Pick<User, "role" | "department" | "id"> | null
+  canCreateProject: boolean
 }
 
-export function AppSidebar({ projects, user }: AppSidebarProps) {
+export function AppSidebar({ projects, canCreateProject }: AppSidebarProps) {
   const pathname = usePathname()
-  const permissions = getUserPermissions(user)
 
   return (
     <Sidebar>
@@ -34,7 +32,7 @@ export function AppSidebar({ projects, user }: AppSidebarProps) {
           <SidebarGroupLabel className="flex items-center justify-between">
             Projects
             {/* PERMISSION: */}
-            {permissions.can("project", "create") && (
+            {canCreateProject && (
               <Button variant="ghost" size="icon-xs" asChild>
                 <Link href="/projects/new">
                   <PlusIcon className="size-4" />

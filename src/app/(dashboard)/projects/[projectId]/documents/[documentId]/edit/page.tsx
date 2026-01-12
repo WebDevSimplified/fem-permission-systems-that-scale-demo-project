@@ -3,10 +3,9 @@ import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { DocumentForm } from "@/components/document-form"
-import { getCurrentUser } from "@/lib/session"
+import { getUserPermissions } from "@/permissions/abac"
 import { getDocumentByIdService } from "@/services/documents"
 import { getProjectByIdService } from "@/services/projects"
-import { getUserPermissions } from "@/permissions/abac"
 
 export default async function EditDocumentPage({
   params,
@@ -20,8 +19,7 @@ export default async function EditDocumentPage({
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
+  const permissions = await getUserPermissions()
   if (!permissions.can("document", "update", document)) {
     return redirect(`/projects/${projectId}/`)
   }
@@ -42,7 +40,19 @@ export default async function EditDocumentPage({
       </div>
 
       <div className="max-w-2xl">
-        <DocumentForm document={document} projectId={projectId} />
+        <DocumentForm
+          document={document}
+          projectId={projectId}
+          canModify={{
+            status: permissions.can("document", "update", document, "status"),
+            isLocked: permissions.can(
+              "document",
+              "update",
+              document,
+              "isLocked",
+            ),
+          }}
+        />
       </div>
     </div>
   )

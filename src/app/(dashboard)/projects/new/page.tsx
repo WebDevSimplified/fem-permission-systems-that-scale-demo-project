@@ -2,14 +2,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { ProjectForm } from "@/components/project-form"
-import { getCurrentUser } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { getUserPermissions } from "@/permissions/abac"
 
 export default async function NewProjectPage() {
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
+  const permissions = await getUserPermissions()
   if (!permissions.can("project", "create")) return redirect(`/`)
 
   return (
