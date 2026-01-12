@@ -31,7 +31,7 @@ export function AppSidebar({ projects, user }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between">
             Projects
-            {/* PERMISSION */}
+            {/* PERMISSION: */}
             {user?.role === "admin" && (
               <Button variant="ghost" size="icon-xs" asChild>
                 <Link href="/projects/new">

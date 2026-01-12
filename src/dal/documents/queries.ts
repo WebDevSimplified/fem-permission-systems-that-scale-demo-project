@@ -1,8 +1,6 @@
 import { db } from "@/drizzle/db"
-import { DocumentTable, User, UserTable } from "@/drizzle/schema"
-import { AuthorizationError } from "@/lib/errors"
-import { getCurrentUser } from "@/lib/session"
-import { and, eq, ne, or } from "drizzle-orm"
+import { DocumentTable, UserTable } from "@/drizzle/schema"
+import { eq } from "drizzle-orm"
 
 export async function getDocumentById(id: string) {
   return db.query.DocumentTable.findFirst({
@@ -11,10 +9,6 @@ export async function getDocumentById(id: string) {
 }
 
 export async function getProjectDocuments(projectId: string) {
-  // PERMISSION
-  const user = await getCurrentUser()
-  if (user == null) throw new AuthorizationError()
-
   return db
     .select({
       id: DocumentTable.id,
@@ -29,7 +23,7 @@ export async function getProjectDocuments(projectId: string) {
     })
     .from(DocumentTable)
     .innerJoin(UserTable, eq(DocumentTable.creatorId, UserTable.id))
-    .where(and(eq(DocumentTable.projectId, projectId), userWhereClause(user)))
+    .where(eq(DocumentTable.projectId, projectId))
     .orderBy(DocumentTable.createdAt)
 }
 
@@ -41,23 +35,4 @@ export async function getDocumentWithUserInfo(id: string) {
       lastEditedBy: { columns: { name: true } },
     },
   })
-}
-
-// PERMISSION
-function userWhereClause(user: Pick<User, "role" | "id">) {
-  const role = user.role
-  switch (role) {
-    case "author":
-      return or(
-        ne(DocumentTable.status, "draft"),
-        eq(DocumentTable.creatorId, user.id),
-      )
-    case "viewer":
-      return ne(DocumentTable.status, "draft")
-    case "admin":
-    case "editor":
-      return undefined
-    default:
-      throw new Error(`Unhandled user role: ${role satisfies never}`)
-  }
 }

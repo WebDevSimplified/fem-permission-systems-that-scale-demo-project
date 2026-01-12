@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/session"
 import { eq } from "drizzle-orm"
 
 export async function createProject(data: ProjectInsertData) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null || user.role !== "admin") {
     throw new AuthorizationError()
@@ -23,7 +23,7 @@ export async function updateProject(
   projectId: string,
   data: Partial<ProjectInsertData>,
 ) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null || user.role !== "admin") {
     throw new AuthorizationError()
@@ -33,7 +33,7 @@ export async function updateProject(
 }
 
 export async function deleteProject(projectId: string) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null || user.role !== "admin") {
     throw new AuthorizationError()

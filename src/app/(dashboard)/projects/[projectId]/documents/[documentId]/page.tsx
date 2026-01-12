@@ -46,8 +46,10 @@ export default async function DocumentDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
-          {/* PERMISSION */}
-          {(user?.role === "author" || user?.role === "editor") && (
+          {/* PERMISSION: */}
+          {(user?.role === "author" ||
+            user?.role === "editor" ||
+            user?.role === "admin") && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -57,7 +59,7 @@ export default async function DocumentDetailPage({
               </Link>
             </Button>
           )}
-          {/* PERMISSION */}
+          {/* PERMISSION: */}
           {user?.role === "admin" && (
             <ActionButton
               variant="destructive"

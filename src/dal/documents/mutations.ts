@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/session"
 import { eq } from "drizzle-orm"
 
 export async function createDocument(data: DocumentInsertData) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   // FIX: Missing viewer role check
   if (user == null || user.role === "editor") {
@@ -24,7 +24,7 @@ export async function updateDocument(
   documentId: string,
   data: Partial<DocumentInsertData>,
 ) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null || user.role === "viewer") {
     throw new AuthorizationError()
@@ -37,7 +37,7 @@ export async function updateDocument(
 }
 
 export async function deleteDocument(documentId: string) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null || user.role !== "admin") {
     throw new AuthorizationError()

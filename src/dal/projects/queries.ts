@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/session"
 import { eq, isNull, or } from "drizzle-orm"
 
 export async function getAllProjects({ ordered } = { ordered: false }) {
-  // PERMISSION
+  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null) throw new AuthorizationError()
 
@@ -21,7 +21,7 @@ export async function getProjectById(id: string) {
   })
 }
 
-// PERMISSION
+// PERMISSION:
 function userWhereClause(user: Pick<User, "role" | "department">) {
   const role = user.role
   switch (role) {
