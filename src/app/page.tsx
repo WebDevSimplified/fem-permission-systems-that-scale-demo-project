@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { LoginForm } from "@/components/login-form"
-import { getUsers } from "@/dal/users/queries"
+import { getUsers } from "@/dal/users"
 
 export default async function LoginPage() {
   const currentUser = await getCurrentUser()

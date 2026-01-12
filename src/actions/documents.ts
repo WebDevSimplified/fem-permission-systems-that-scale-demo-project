@@ -1,32 +1,20 @@
 "use server"
 
-import { getCurrentUser } from "@/lib/session"
 import { redirect } from "next/navigation"
-import { documentSchema, type DocumentFormValues } from "../schemas/documents"
-import {
-  createDocument,
-  deleteDocument,
-  updateDocument,
-} from "@/dal/documents/mutations"
+import { type DocumentFormValues } from "../schemas/documents"
 import { tryFn } from "@/lib/helpers"
+import {
+  createDocumentService,
+  deleteDocumentService,
+  updateDocumentService,
+} from "@/services/documents"
 
 export async function createDocumentAction(
   projectId: string,
   data: DocumentFormValues,
 ) {
-  const user = await getCurrentUser()
-  if (user == null) return { message: "Not authenticated" }
-
-  const result = documentSchema.safeParse(data)
-  if (!result.success) return { message: "Invalid data" }
-
   const [error, document] = await tryFn(() =>
-    createDocument({
-      ...result.data,
-      projectId,
-      creatorId: user.id,
-      lastEditedById: user.id,
-    }),
+    createDocumentService(projectId, data),
   )
 
   if (error) return error
@@ -39,18 +27,7 @@ export async function updateDocumentAction(
   projectId: string,
   data: DocumentFormValues,
 ) {
-  const user = await getCurrentUser()
-  if (user == null) return { message: "Not authenticated" }
-
-  const result = documentSchema.safeParse(data)
-  if (!result.success) return { message: "Invalid data" }
-
-  const [error] = await tryFn(() =>
-    updateDocument(documentId, {
-      ...result.data,
-      lastEditedById: user.id,
-    }),
-  )
+  const [error] = await tryFn(() => updateDocumentService(documentId, data))
 
   if (error) return error
 
@@ -61,7 +38,7 @@ export async function deleteDocumentAction(
   documentId: string,
   projectId: string,
 ) {
-  const [error] = await tryFn(() => deleteDocument(documentId))
+  const [error] = await tryFn(() => deleteDocumentService(documentId))
 
   if (error) return error
 

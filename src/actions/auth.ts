@@ -3,7 +3,7 @@
 import { setSession, clearSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loginSchema, type LoginFormValues } from "../schemas/auth"
-import { getUserByEmail } from "@/dal/users/queries"
+import { getUserByEmail } from "@/dal/users"
 
 export async function login(data: LoginFormValues) {
   const result = loginSchema.safeParse(data)

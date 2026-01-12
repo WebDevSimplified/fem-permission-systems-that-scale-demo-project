@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import { getUserById } from "@/dal/users/queries"
+import { getUserById } from "@/dal/users"
 
 const SESSION_COOKIE_NAME = "session_user_id"
 const SESSION_DURATION_DAYS = 7

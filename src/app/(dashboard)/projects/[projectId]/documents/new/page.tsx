@@ -2,26 +2,20 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
-import { getProjectById } from "@/dal/projects/queries"
 import { DocumentForm } from "@/components/document-form"
-import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
+import { getProjectByIdService } from "@/services/projects"
+
 export default async function NewDocumentPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/new">) {
   const { projectId } = await params
 
-  const project = await getProjectById(projectId)
+  const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
-  if (!permissions.can("project", "read", project)) {
-    return redirect(`/`)
-  }
-
-  // PERMISSION:
+  const permissions = await getUserPermissions()
   if (!permissions.can("document", "create")) {
     return redirect(`/projects/${projectId}`)
   }
@@ -42,7 +36,18 @@ export default async function NewDocumentPage({
       </div>
 
       <div className="max-w-2xl">
-        <DocumentForm projectId={projectId} />
+        <DocumentForm
+          projectId={projectId}
+          canModify={{
+            status: permissions.can("document", "create", undefined, "status"),
+            isLocked: permissions.can(
+              "document",
+              "create",
+              undefined,
+              "isLocked",
+            ),
+          }}
+        />
       </div>
     </div>
   )

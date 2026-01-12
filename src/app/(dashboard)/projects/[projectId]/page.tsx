@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import {
   Card,
   CardContent,
@@ -11,26 +11,19 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, LockIcon, FileTextIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
-import { getProjectById } from "@/dal/projects/queries"
-import { getProjectDocuments } from "@/dal/documents/queries"
-import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
+import { getProjectDocumentsService } from "@/services/documents"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function ProjectDocumentsPage({
   params,
 }: PageProps<"/projects/[projectId]">) {
   const { projectId } = await params
-  const project = await getProjectById(projectId)
+  const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
-  // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
-  if (!permissions.can("project", "read", project)) {
-    return redirect("/")
-  }
-
-  const documents = await getProjectDocuments(projectId)
+  const permissions = await getUserPermissions()
+  const documents = await getProjectDocumentsService(projectId)
 
   return (
     <div className="space-y-6">
@@ -92,16 +85,36 @@ export default async function ProjectDocumentsPage({
                 <CardHeader className="gap-0">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-lg">{doc.title}</CardTitle>
-                    {doc.isLocked && (
-                      <LockIcon className="size-4 text-muted-foreground" />
-                    )}
+                    {doc.isLocked &&
+                      permissions.can(
+                        "document",
+                        "read",
+                        {
+                          ...doc,
+                          creatorId: doc.creator.id,
+                          projectId,
+                        },
+                        "isLocked",
+                      ) && (
+                        <LockIcon className="size-4 text-muted-foreground" />
+                      )}
                   </div>
                   <CardDescription>{doc.creator.name}</CardDescription>
                   <div className="flex items-center gap-2 pt-2">
                     <Badge variant={getStatusBadgeVariant(doc.status)}>
                       {doc.status}
                     </Badge>
-                    {doc.isLocked && <Badge variant="outline">locked</Badge>}
+                    {doc.isLocked &&
+                      permissions.can(
+                        "document",
+                        "read",
+                        {
+                          ...doc,
+                          creatorId: doc.creator.id,
+                          projectId,
+                        },
+                        "isLocked",
+                      ) && <Badge variant="outline">locked</Badge>}
                   </div>
                 </CardHeader>
               </Card>

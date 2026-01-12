@@ -2,31 +2,24 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
-import { getProjectById } from "@/dal/projects/queries"
-import { getDocumentById } from "@/dal/documents/queries"
 import { DocumentForm } from "@/components/document-form"
-import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
+import { getDocumentByIdService } from "@/services/documents"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function EditDocumentPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/[documentId]/edit">) {
   const { projectId, documentId } = await params
 
-  const document = await getDocumentById(documentId)
+  const document = await getDocumentByIdService(documentId)
   if (document == null) return notFound()
 
-  const project = await getProjectById(projectId)
+  const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
-  if (!permissions.can("project", "read", project)) {
-    return redirect(`/`)
-  }
-
-  // PERMISSION:
+  const permissions = await getUserPermissions()
   if (!permissions.can("document", "update", document)) {
     return redirect(`/projects/${projectId}/`)
   }
@@ -47,7 +40,19 @@ export default async function EditDocumentPage({
       </div>
 
       <div className="max-w-2xl">
-        <DocumentForm document={document} projectId={projectId} />
+        <DocumentForm
+          document={document}
+          projectId={projectId}
+          canModify={{
+            status: permissions.can("document", "update", document, "status"),
+            isLocked: permissions.can(
+              "document",
+              "update",
+              document,
+              "isLocked",
+            ),
+          }}
+        />
       </div>
     </div>
   )

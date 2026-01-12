@@ -11,22 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { getProjectById } from "@/dal/projects/queries"
 import { ProjectForm } from "@/components/project-form"
-import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function EditProjectPage({
   params,
 }: PageProps<"/projects/[projectId]/edit">) {
   const { projectId } = await params
 
-  const project = await getProjectById(projectId)
+  const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  const permissions = getUserPermissions(user)
+  const permissions = await getUserPermissions()
   if (!permissions.can("project", "update", project)) {
     return redirect(`/projects/${projectId}`)
   }
