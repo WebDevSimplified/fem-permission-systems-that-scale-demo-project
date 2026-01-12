@@ -12,7 +12,7 @@ import { LogOutIcon } from "lucide-react"
 import { logout } from "@/actions/auth"
 import { ActionButton } from "@/components/ui/action-button"
 import { getRoleBadgeVariant } from "@/lib/helpers"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 import { getAllProjectsService } from "@/services/projects"
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
     <SidebarProvider>
       <AppSidebar
         projects={projects}
-        canCreateProject={permissions.can("project", "create")}
+        canCreateProject={permissions.can("create", "project")}
       />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">

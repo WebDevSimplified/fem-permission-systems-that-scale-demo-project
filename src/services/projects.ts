@@ -4,9 +4,15 @@ import {
   deleteProject,
   updateProject,
 } from "@/dal/projects/mutations"
+import { ProjectTable } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { getUserPermissions } from "@/permissions/abac"
+import {
+  CaslSubject,
+  getUserPermissions,
+  pickPermittedFields,
+  toDrizzleWhere,
+} from "@/permissions/casl"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
 
 export async function createProjectService(data: ProjectFormValues) {
@@ -17,15 +23,11 @@ export async function createProjectService(data: ProjectFormValues) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "create")) {
+  if (!permissions.can("create", "project")) {
     throw new AuthorizationError()
   }
 
-  const restrictedData = permissions.pickPermittedFields(
-    "project",
-    "create",
-    data,
-  )
+  const restrictedData = await pickPermittedFields("create", "project", data)
   const result = projectSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
@@ -42,19 +44,18 @@ export async function updateProjectService(
 ) {
   const project = await getProjectById(projectId)
   if (project == null) throw new Error("Project not found")
+  const caslProject = {
+    ...project,
+    __caslType: "project",
+  } satisfies CaslSubject
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "update", project)) {
+  if (!permissions.can("update", caslProject)) {
     throw new AuthorizationError()
   }
 
-  const restrictedData = permissions.pickPermittedFields(
-    "project",
-    "update",
-    data,
-    project,
-  )
+  const restrictedData = await pickPermittedFields("update", caslProject, data)
   const result = projectSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
@@ -70,7 +71,7 @@ export async function deleteProjectService(projectId: string) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "delete", project)) {
+  if (!permissions.can("delete", { ...project, __caslType: "project" })) {
     throw new AuthorizationError()
   }
 
@@ -80,22 +81,37 @@ export async function deleteProjectService(projectId: string) {
 export async function getAllProjectsService({ ordered } = { ordered: false }) {
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "read")) return []
+  if (!permissions.can("read", "project")) return []
 
-  return getAllProjects(permissions.toDrizzleWhere("project", "read"), {
-    ordered,
-  })
+  const projects = await getAllProjects(
+    await toDrizzleWhere("read", "project", ProjectTable),
+    {
+      ordered,
+    },
+  )
+
+  return projects.map(
+    project =>
+      ({
+        ...project,
+        __caslType: "project",
+      }) satisfies CaslSubject,
+  )
 }
 
 export async function getProjectByIdService(id: string) {
   const project = await getProjectById(id)
   if (project == null) return null
+  const caslProject = {
+    ...project,
+    __caslType: "project",
+  } satisfies CaslSubject
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "read", project)) {
+  if (!permissions.can("read", caslProject)) {
     return null
   }
 
-  return project
+  return caslProject
 }
