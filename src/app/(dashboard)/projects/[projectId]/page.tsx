@@ -37,12 +37,13 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION */}
-          {(user?.role === "editor" || user?.role === "author") && (
+          {user?.role === "admin" && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>
           )}
           {/* PERMISSION */}
+          {/* FIX: Forgot to add admin role */}
           {user?.role === "author" && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
