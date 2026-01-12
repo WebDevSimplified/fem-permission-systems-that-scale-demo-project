@@ -10,9 +10,7 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfo } from "@/dal/documents/queries"
 import { getCurrentUser } from "@/lib/session"
 import { getProjectById } from "@/dal/projects/queries"
-import { can } from "@/permissions/rbac"
-import { canReadProject } from "@/permissions/projects"
-import { canReadDocument, canUpdateDocument } from "@/permissions/documents"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function DocumentDetailPage({
   params,
@@ -21,17 +19,17 @@ export default async function DocumentDetailPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
+  const permissions = getUserPermissions(user)
   const project = await getProjectById(projectId)
   if (project == null) return notFound()
-  if (!canReadProject(user, project)) {
+  if (!permissions.can("project", "read", project)) {
     return redirect("/")
   }
 
+  // PERMISSION:
   const document = await getDocumentWithUserInfo(documentId)
   if (document == null) return notFound()
-
-  // PERMISSION:
-  if (!canReadDocument(user, document)) {
+  if (!permissions.can("document", "read", document)) {
     return redirect(`/projects/${projectId}`)
   }
 
@@ -60,7 +58,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {canUpdateDocument(user, document) && (
+          {permissions.can("document", "update", document) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -71,7 +69,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {can(user, "document:delete") && (
+          {permissions.can("document", "delete", document) && (
             <ActionButton
               variant="destructive"
               requireAreYouSure

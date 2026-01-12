@@ -2,15 +2,15 @@ import { db } from "@/drizzle/db"
 import { DocumentInsertData, DocumentTable } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { canUpdateDocument } from "@/permissions/documents"
-import { can } from "@/permissions/rbac"
 import { eq } from "drizzle-orm"
 import { getDocumentById } from "./queries"
+import { getUserPermissions } from "@/permissions/abac"
 
 export async function createDocument(data: DocumentInsertData) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "document:create")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "create")) {
     throw new AuthorizationError()
   }
 
@@ -28,9 +28,12 @@ export async function updateDocument(
 ) {
   // PERMISSION:
   const user = await getCurrentUser()
+  const permissions = getUserPermissions(user)
   const document = await getDocumentById(documentId)
   if (document == null) throw new Error("Document not found")
-  if (!canUpdateDocument(user, document)) throw new AuthorizationError()
+  if (!permissions.can("document", "update", document)) {
+    throw new AuthorizationError()
+  }
 
   await db
     .update(DocumentTable)
@@ -41,7 +44,10 @@ export async function updateDocument(
 export async function deleteDocument(documentId: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "document:delete")) {
+  const permissions = getUserPermissions(user)
+  const document = await getDocumentById(documentId)
+  if (document == null) throw new Error("Document not found")
+  if (!permissions.can("document", "delete", document)) {
     throw new AuthorizationError()
   }
 
