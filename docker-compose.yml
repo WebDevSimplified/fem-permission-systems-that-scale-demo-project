@@ -1,9 +1,9 @@
 services:
   db:
     image: postgres:18.0
-    hostname: localhost
+    hostname: ${DB_HOST}
     ports:
-      - "5432:5432"
+      - "5432:${DB_PORT}"
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=${DB_USER}
