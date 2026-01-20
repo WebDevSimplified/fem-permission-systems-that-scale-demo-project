@@ -42,6 +42,7 @@ export default async function EditProjectPage({
       <div className="max-w-2xl space-y-6">
         <ProjectForm project={project} />
 
+        {/* FIX: Missing permission check */}
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Danger Zone</CardTitle>
