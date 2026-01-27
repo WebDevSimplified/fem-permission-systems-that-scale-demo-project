@@ -63,6 +63,7 @@ export default async function ProjectDocumentsPage({
             <p className="text-muted-foreground mb-4">
               Create your first document in this project.
             </p>
+            {/* FIX: Missing permission check */}
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4 mr-2" />
