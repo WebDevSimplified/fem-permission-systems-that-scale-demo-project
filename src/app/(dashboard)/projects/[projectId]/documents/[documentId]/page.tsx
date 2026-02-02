@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,18 +9,34 @@ import { ArrowLeftIcon, LockIcon, PencilIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfo } from "@/dal/documents/queries"
 import { getCurrentUser } from "@/lib/session"
+import { getProjectById } from "@/dal/projects/queries"
 
 export default async function DocumentDetailPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/[documentId]">) {
   const { projectId, documentId } = await params
-  // FIX: Not checking permissions
-  // FIX: Not checking if user has access to project
+  const project = await getProjectById(projectId)
+
+  if (project == null) {
+    return notFound()
+  }
+
+  // PERMISSION:
+  const user = await getCurrentUser()
+  if (user == null) {
+    return redirect("/")
+  }
+
+  if (
+    user.role !== "admin" &&
+    project.department != null &&
+    user.department !== project.department
+  ) {
+    return redirect("/")
+  }
 
   const document = await getDocumentWithUserInfo(documentId)
   if (document == null) return notFound()
-
-  const user = await getCurrentUser()
 
   return (
     <div className="space-y-6">
