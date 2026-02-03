@@ -8,8 +8,12 @@ type Permission =
   | "project:update"
   | "project:delete"
   | "document:create"
-  | "document:read"
-  | "document:update"
+  | "document:read:all"
+  | "document:read:own"
+  | "document:read:non-draft"
+  | "document:update:all"
+  | "document:update:unlocked"
+  | "document:update:own-unlocked"
   | "document:delete"
 
 const PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -19,27 +23,28 @@ const PERMISSIONS: Record<UserRole, Permission[]> = {
     "project:update",
     "project:delete",
     "document:create",
-    "document:read",
-    "document:update",
+    "document:read:all",
+    "document:update:all",
     "document:delete",
   ],
   author: [
     "project:read:own-department",
     "project:read:global-department",
     "document:create",
-    "document:read",
-    "document:update",
+    "document:read:non-draft",
+    "document:read:own",
+    "document:update:own-unlocked",
   ],
   editor: [
     "project:read:own-department",
     "project:read:global-department",
-    "document:read",
-    "document:update",
+    "document:read:all",
+    "document:update:unlocked",
   ],
   viewer: [
     "project:read:own-department",
     "project:read:global-department",
-    "document:read",
+    "document:read:non-draft",
   ],
 }
 
