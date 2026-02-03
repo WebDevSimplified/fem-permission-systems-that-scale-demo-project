@@ -88,7 +88,7 @@ async function seed() {
       {
         name: "System Architecture",
         description: "High-level system design documents",
-        ownerId: getUser("author.eng@example.com").id,
+        ownerId: getUser("admin.eng@example.com").id,
         department: "Engineering",
       },
 
@@ -102,7 +102,7 @@ async function seed() {
       {
         name: "Campaign Plans",
         description: "Marketing campaign strategies and plans",
-        ownerId: getUser("author.marketing@example.com").id,
+        ownerId: getUser("admin.marketing@example.com").id,
         department: "Marketing",
       },
 
@@ -254,7 +254,7 @@ async function seed() {
       {
         title: "Company History",
         content: "Our Story\n\nFounded in 2020...",
-        status: "published",
+        status: "draft",
         isLocked: false,
         projectId: getProject("Company Wiki").id,
         creatorId: getUser("admin.eng@example.com").id,
