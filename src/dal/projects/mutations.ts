@@ -2,12 +2,13 @@ import { db } from "@/drizzle/db"
 import { ProjectInsertData, ProjectTable } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
+import { can } from "@/permissions/rbac"
 import { eq } from "drizzle-orm"
 
 export async function createProject(data: ProjectInsertData) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null || user.role !== "admin") {
+  if (!can(user, "project:create")) {
     throw new AuthorizationError()
   }
 
@@ -25,7 +26,7 @@ export async function updateProject(
 ) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null || user.role !== "admin") {
+  if (!can(user, "project:update")) {
     throw new AuthorizationError()
   }
 
@@ -35,7 +36,7 @@ export async function updateProject(
 export async function deleteProject(projectId: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null || user.role !== "admin") {
+  if (!can(user, "project:delete")) {
     throw new AuthorizationError()
   }
 
