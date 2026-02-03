@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Project, User } from "@/drizzle/schema"
+import { can } from "@/permissions/rbac"
 
 type AppSidebarProps = {
   projects: Pick<Project, "id" | "name" | "department">[]
@@ -32,7 +33,7 @@ export function AppSidebar({ projects, user }: AppSidebarProps) {
           <SidebarGroupLabel className="flex items-center justify-between">
             Projects
             {/* PERMISSION: */}
-            {user?.role === "admin" && (
+            {can(user, "project:delete") && (
               <Button variant="ghost" size="icon-xs" asChild>
                 <Link href="/projects/new">
                   <PlusIcon className="size-4" />
