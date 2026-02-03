@@ -8,6 +8,7 @@ import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
 import { can } from "@/permissions/rbac"
 import { canReadProject } from "@/permissions/projects"
+import { canUpdateDocument } from "@/permissions/documents"
 
 export default async function EditDocumentPage({
   params,
@@ -22,7 +23,7 @@ export default async function EditDocumentPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!canReadProject(user, project) || !can(user, "document:update")) {
+  if (!canReadProject(user, project) || !canUpdateDocument(user, document)) {
     return redirect("/")
   }
 

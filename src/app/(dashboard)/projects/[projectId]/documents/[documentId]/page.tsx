@@ -12,6 +12,7 @@ import { getCurrentUser } from "@/lib/session"
 import { getProjectById } from "@/dal/projects/queries"
 import { can } from "@/permissions/rbac"
 import { canReadProject } from "@/permissions/projects"
+import { canReadDocument, canUpdateDocument } from "@/permissions/documents"
 
 export default async function DocumentDetailPage({
   params,
@@ -24,13 +25,13 @@ export default async function DocumentDetailPage({
   }
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!canReadProject(user, project) || !can(user, "document:read")) {
-    return redirect("/")
-  }
-
   const document = await getDocumentWithUserInfo(documentId)
   if (document == null) return notFound()
+
+  const user = await getCurrentUser()
+  if (!canReadProject(user, project) || !canReadDocument(user, document)) {
+    return redirect("/")
+  }
 
   return (
     <div className="space-y-6">
@@ -57,7 +58,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {can(user, "document:update") && (
+          {canUpdateDocument(user, document) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
