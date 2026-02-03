@@ -15,15 +15,10 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-
-type Project = {
-  id: string
-  name: string
-  department: string | null
-}
+import { Project } from "@/drizzle/schema/project"
 
 type AppSidebarProps = {
-  projects: Project[]
+  projects: Pick<Project, "id" | "name" | "department">[]
 }
 
 export function AppSidebar({ projects }: AppSidebarProps) {

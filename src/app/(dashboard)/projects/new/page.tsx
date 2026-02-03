@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { ProjectForm } from "@/components/project-form"
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">

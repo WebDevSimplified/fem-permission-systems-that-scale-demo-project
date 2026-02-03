@@ -2,13 +2,13 @@ import { db } from "@/drizzle/db"
 import { DocumentTable, UserTable } from "@/drizzle/schema"
 import { eq } from "drizzle-orm"
 
-export function getDocumentById(id: string) {
+export async function getDocumentById(id: string) {
   return db.query.DocumentTable.findFirst({
     where: eq(DocumentTable.id, id),
   })
 }
 
-export function getProjectDocuments(projectId: string) {
+export async function getProjectDocuments(projectId: string) {
   return db
     .select({
       id: DocumentTable.id,
@@ -27,7 +27,7 @@ export function getProjectDocuments(projectId: string) {
     .orderBy(DocumentTable.createdAt)
 }
 
-export function getDocumentWithUserInfo(id: string) {
+export async function getDocumentWithUserInfo(id: string) {
   return db.query.DocumentTable.findFirst({
     where: eq(DocumentTable.id, id),
     with: {
