@@ -7,11 +7,9 @@ import { ActionButton } from "@/components/ui/action-button"
 import { deleteDocumentAction } from "@/actions/documents"
 import { ArrowLeftIcon, LockIcon, PencilIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
-import { getCurrentUser } from "@/lib/session"
 import { getProjectByIdService } from "@/services/projects"
 import { getDocumentWithUserInfoService } from "@/services/documents"
-import { can } from "@/permissions/rbac"
-import { canUpdateDocument } from "@/permissions/documents"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function DocumentDetailPage({
   params,
@@ -24,7 +22,7 @@ export default async function DocumentDetailPage({
   const document = await getDocumentWithUserInfoService(documentId)
   if (document == null) return notFound()
 
-  const user = await getCurrentUser()
+  const permissions = await getUserPermissions()
 
   return (
     <div className="space-y-6">
@@ -51,7 +49,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {canUpdateDocument(user, document) && (
+          {permissions.can("document", "update", document) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -62,7 +60,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {can(user, "document:delete") && (
+          {permissions.can("document", "delete", document) && (
             <ActionButton
               variant="destructive"
               requireAreYouSure

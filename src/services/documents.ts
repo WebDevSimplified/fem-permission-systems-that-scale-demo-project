@@ -12,8 +12,7 @@ import { DocumentTable } from "@/drizzle/schema/document"
 import { User } from "@/drizzle/schema/user"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { can } from "@/permissions/rbac"
-import { canReadDocument, canUpdateDocument } from "@/permissions/documents"
+import { getUserPermissions } from "@/permissions/abac"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
 import { eq, ne, or } from "drizzle-orm"
 
@@ -26,20 +25,23 @@ export async function createDocumentService(
     throw new Error("Unauthenticated")
   }
 
-  // PERMISSION:
-  if (!can(user, "document:create")) {
-    throw new AuthorizationError()
-  }
-
   const result = documentSchema.safeParse(data)
   if (!result.success) throw new Error("Invalid data")
 
-  return createDocument({
+  const newDocument = {
     ...result.data,
     creatorId: user.id,
     lastEditedById: user.id,
     projectId,
-  })
+  }
+
+  // PERMISSION:
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "create", newDocument)) {
+    throw new AuthorizationError()
+  }
+
+  return createDocument(newDocument)
 }
 
 export async function updateDocumentService(
@@ -55,7 +57,8 @@ export async function updateDocumentService(
   if (document == null) throw new Error("Document not found")
 
   // PERMISSION:
-  if (!canUpdateDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "update", document)) {
     throw new AuthorizationError()
   }
 
@@ -66,9 +69,12 @@ export async function updateDocumentService(
 }
 
 export async function deleteDocumentService(documentId: string) {
+  const document = await getDocumentById(documentId)
+  if (document == null) throw new Error("Document not found")
+
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!can(user, "document:delete")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "delete", document)) {
     throw new AuthorizationError()
   }
 
@@ -80,8 +86,8 @@ export async function getDocumentByIdService(id: string) {
   if (document == null) return null
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!canReadDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read", document)) {
     return null
   }
 
@@ -93,8 +99,8 @@ export async function getDocumentWithUserInfoService(id: string) {
   if (document == null) return null
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!canReadDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read", document)) {
     return null
   }
 
@@ -102,9 +108,14 @@ export async function getDocumentWithUserInfoService(id: string) {
 }
 
 export async function getProjectDocumentsService(projectId: string) {
-  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null) {
+    return []
+  }
+
+  // PERMISSION:
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read")) {
     return []
   }
 
