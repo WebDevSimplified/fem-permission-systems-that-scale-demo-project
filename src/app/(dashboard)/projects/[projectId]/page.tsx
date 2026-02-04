@@ -21,10 +21,19 @@ export default async function ProjectDocumentsPage({
   const { projectId } = await params
   const project = await getProjectById(projectId)
   if (project == null) return notFound()
-  // FIX: Not checking if user has access to project
+
+  // PERMISSION:
+  const user = await getCurrentUser()
+  if (
+    user == null ||
+    (user.role !== "admin" &&
+      project.department != null &&
+      user.department !== project.department)
+  ) {
+    return redirect("/")
+  }
 
   const documents = await getProjectDocuments(projectId)
-  const user = await getCurrentUser()
 
   return (
     <div className="space-y-6">
@@ -43,8 +52,7 @@ export default async function ProjectDocumentsPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {/* FIX: Missing admin role check */}
-          {user?.role === "author" && (
+          {(user?.role === "author" || user?.role === "admin") && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4" />
@@ -60,16 +68,20 @@ export default async function ProjectDocumentsPage({
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileTextIcon className="size-12 text-muted-foreground mb-4" />
             <h2 className="text-lg font-medium">No Documents</h2>
-            <p className="text-muted-foreground mb-4">
-              Create your first document in this project.
-            </p>
-            {/* FIX: Missing permission check */}
-            <Button asChild>
-              <Link href={`/projects/${projectId}/documents/new`}>
-                <PlusIcon className="size-4 mr-2" />
-                New Document
-              </Link>
-            </Button>
+            {/* PERMISSION: */}
+            {(user?.role === "author" || user?.role === "admin") && (
+              <>
+                <p className="text-muted-foreground mb-4">
+                  Create your first document in this project.
+                </p>
+                <Button asChild>
+                  <Link href={`/projects/${projectId}/documents/new`}>
+                    <PlusIcon className="size-4 mr-2" />
+                    New Document
+                  </Link>
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
