@@ -5,7 +5,8 @@ import { ArrowLeftIcon } from "lucide-react"
 import { DocumentForm } from "@/components/document-form"
 import { getDocumentByIdService } from "@/services/documents"
 import { getProjectByIdService } from "@/services/projects"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
+import { subject } from "@casl/ability"
 
 export default async function EditDocumentPage({
   params,
@@ -20,7 +21,7 @@ export default async function EditDocumentPage({
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("document", "update", document)) {
+  if (!permissions.can("update", subject("document", { ...document }))) {
     return redirect(`/projects/${projectId}/`)
   }
 
@@ -44,11 +45,14 @@ export default async function EditDocumentPage({
           document={document}
           projectId={projectId}
           canModify={{
-            status: permissions.can("document", "update", document, "status"),
-            isLocked: permissions.can(
-              "document",
+            status: permissions.can(
               "update",
-              document,
+              subject("document", { ...document }),
+              "status",
+            ),
+            isLocked: permissions.can(
+              "update",
+              subject("document", { ...document }),
               "isLocked",
             ),
           }}
