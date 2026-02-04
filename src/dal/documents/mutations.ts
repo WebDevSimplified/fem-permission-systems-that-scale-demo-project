@@ -2,15 +2,15 @@ import { db } from "@/drizzle/db"
 import { DocumentInsertData, DocumentTable } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { canUpdateDocument } from "@/permissions/documents"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 import { eq } from "drizzle-orm"
 import { getDocumentById } from "./queries"
 
 export async function createDocument(data: DocumentInsertData) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "document:create")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "create")) {
     throw new AuthorizationError()
   }
 
@@ -31,7 +31,8 @@ export async function updateDocument(
   const document = await getDocumentById(documentId)
   if (document == null) return
 
-  if (!canUpdateDocument(user, document)) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "update", document)) {
     throw new AuthorizationError()
   }
 
@@ -44,7 +45,11 @@ export async function updateDocument(
 export async function deleteDocument(documentId: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "document:delete")) {
+  const document = await getDocumentById(documentId)
+  if (document == null) return
+
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "delete", document)) {
     throw new AuthorizationError()
   }
 

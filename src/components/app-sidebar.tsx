@@ -16,15 +16,16 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Project, User } from "@/drizzle/schema"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 
 type AppSidebarProps = {
   projects: Pick<Project, "id" | "name" | "department">[]
-  user: Pick<User, "role"> | null
+  user: Pick<User, "role" | "department" | "id"> | null
 }
 
 export function AppSidebar({ projects, user }: AppSidebarProps) {
   const pathname = usePathname()
+  const permissions = getUserPermissions(user)
 
   return (
     <Sidebar>
@@ -33,7 +34,7 @@ export function AppSidebar({ projects, user }: AppSidebarProps) {
           <SidebarGroupLabel className="flex items-center justify-between">
             Projects
             {/* PERMISSION: */}
-            {can(user, "project:delete") && (
+            {permissions.can("project", "create") && (
               <Button variant="ghost" size="icon-xs" asChild>
                 <Link href="/projects/new">
                   <PlusIcon className="size-4" />

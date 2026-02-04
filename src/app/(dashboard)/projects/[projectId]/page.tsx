@@ -14,8 +14,7 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectById } from "@/dal/projects/queries"
 import { getProjectDocuments } from "@/dal/documents/queries"
 import { getCurrentUser } from "@/lib/session"
-import { can } from "@/permissions/rbac"
-import { canReadProject } from "@/permissions/projects"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -25,9 +24,10 @@ export default async function ProjectDocumentsPage({
   if (project == null) return notFound()
 
   const user = await getCurrentUser()
+  const permissions = getUserPermissions(user)
 
   // PERMISSION:
-  if (!canReadProject(user, project)) {
+  if (!permissions.can("project", "read", project)) {
     return redirect("/")
   }
 
@@ -44,13 +44,13 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {can(user, "project:update") && (
+          {permissions.can("project", "update", project) && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>
           )}
           {/* PERMISSION: */}
-          {can(user, "document:create") && (
+          {permissions.can("document", "create") && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4" />
@@ -70,7 +70,7 @@ export default async function ProjectDocumentsPage({
               Create your first document in this project.
             </p>
             {/* PERMISSION: */}
-            {can(user, "document:create") && (
+            {permissions.can("document", "create") && (
               <Button asChild>
                 <Link href={`/projects/${projectId}/documents/new`}>
                   <PlusIcon className="size-4 mr-2" />
