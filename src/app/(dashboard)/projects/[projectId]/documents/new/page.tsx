@@ -5,8 +5,8 @@ import { ArrowLeftIcon } from "lucide-react"
 import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
 import { getProjectByIdService } from "@/services/projects"
-import { can } from "@/permissions/rbac"
 
+import { getUserPermissions } from "@/permissions/abac"
 export default async function NewDocumentPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/new">) {
@@ -17,7 +17,8 @@ export default async function NewDocumentPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "document:create")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "create")) {
     return redirect(`/projects/${projectId}`)
   }
 

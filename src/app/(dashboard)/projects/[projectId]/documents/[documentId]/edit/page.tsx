@@ -6,7 +6,7 @@ import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
 import { getDocumentByIdService } from "@/services/documents"
 import { getProjectByIdService } from "@/services/projects"
-import { canUpdateDocument } from "@/permissions/documents"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function EditDocumentPage({
   params,
@@ -21,7 +21,8 @@ export default async function EditDocumentPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!canUpdateDocument(user, document)) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("document", "update", document)) {
     return redirect(`/projects/${projectId}/`)
   }
 

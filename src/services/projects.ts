@@ -7,8 +7,7 @@ import { getAllProjects, getProjectById } from "@/dal/projects/queries"
 import { ProjectTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { canReadProject } from "@/permissions/projects"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
 import { eq, isNull, or } from "drizzle-orm"
 
@@ -19,7 +18,8 @@ export async function createProjectService(data: ProjectFormValues) {
   }
 
   // PERMISSION:
-  if (!can(user, "project:create")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("project", "create")) {
     throw new AuthorizationError()
   }
 
@@ -37,9 +37,13 @@ export async function updateProjectService(
   projectId: string,
   data: ProjectFormValues,
 ) {
+  const project = await getProjectById(projectId)
+  if (project == null) throw new Error("Project not found")
+
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "project:update")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("project", "update", project)) {
     throw new AuthorizationError()
   }
 
@@ -53,9 +57,13 @@ export async function updateProjectService(
 }
 
 export async function deleteProjectService(projectId: string) {
+  const project = await getProjectById(projectId)
+  if (project == null) throw new Error("Project not found")
+
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!can(user, "project:delete")) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("project", "delete", project)) {
     throw new AuthorizationError()
   }
 
@@ -63,10 +71,14 @@ export async function deleteProjectService(projectId: string) {
 }
 
 export async function getAllProjectsService({ ordered } = { ordered: false }) {
-  // PERMISSION:
   const user = await getCurrentUser()
   if (user == null) throw new Error("Unauthenticated")
 
+  // PERMISSION:
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("project", "read")) {
+    throw new AuthorizationError()
+  }
   return getAllProjects(userWhereClause(user), {
     ordered,
   })
@@ -78,7 +90,8 @@ export async function getProjectByIdService(id: string) {
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (!canReadProject(user, project)) {
+  const permissions = getUserPermissions(user)
+  if (!permissions.can("project", "read", project)) {
     return null
   }
 

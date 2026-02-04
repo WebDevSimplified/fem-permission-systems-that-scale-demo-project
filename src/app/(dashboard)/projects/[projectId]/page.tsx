@@ -14,7 +14,7 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getCurrentUser } from "@/lib/session"
 import { getProjectByIdService } from "@/services/projects"
 import { getProjectDocumentsService } from "@/services/documents"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -24,6 +24,7 @@ export default async function ProjectDocumentsPage({
   if (project == null) return notFound()
 
   const user = await getCurrentUser()
+  const permissions = getUserPermissions(user)
   const documents = await getProjectDocumentsService(projectId)
 
   return (
@@ -37,13 +38,13 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {can(user, "project:update") && (
+          {permissions.can("project", "update", project) && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>
           )}
           {/* PERMISSION: */}
-          {can(user, "document:create") && (
+          {permissions.can("document", "create") && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4" />
@@ -60,7 +61,7 @@ export default async function ProjectDocumentsPage({
             <FileTextIcon className="size-12 text-muted-foreground mb-4" />
             <h2 className="text-lg font-medium">No Documents</h2>
             {/* PERMISSION: */}
-            {can(user, "document:create") && (
+            {permissions.can("document", "create") && (
               <>
                 <p className="text-muted-foreground mb-4">
                   Create your first document in this project.
