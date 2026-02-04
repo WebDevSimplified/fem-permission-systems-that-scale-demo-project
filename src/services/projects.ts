@@ -4,12 +4,10 @@ import {
   updateProject,
 } from "@/dal/projects/mutations"
 import { getAllProjects, getProjectById } from "@/dal/projects/queries"
-import { ProjectTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
-import { eq, isNull, or } from "drizzle-orm"
 
 export async function createProjectService(data: ProjectFormValues) {
   const user = await getCurrentUser()
@@ -17,7 +15,14 @@ export async function createProjectService(data: ProjectFormValues) {
     throw new Error("Unauthenticated")
   }
 
-  const result = projectSchema.safeParse(data)
+  // PERMISSION:
+  const permissions = await getUserPermissions()
+  const restrictedData = permissions.pickPermittedFields(
+    "project",
+    "create",
+    data,
+  )
+  const result = projectSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
   const newProject = {
@@ -27,7 +32,6 @@ export async function createProjectService(data: ProjectFormValues) {
   }
 
   // PERMISSION:
-  const permissions = await getUserPermissions()
   if (!permissions.can("project", "create", newProject)) {
     throw new AuthorizationError()
   }
@@ -48,7 +52,13 @@ export async function updateProjectService(
     throw new AuthorizationError()
   }
 
-  const result = projectSchema.safeParse(data)
+  const restrictedData = permissions.pickPermittedFields(
+    "project",
+    "update",
+    data,
+    project,
+  )
+  const result = projectSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
   return updateProject(projectId, {
@@ -71,15 +81,11 @@ export async function deleteProjectService(projectId: string) {
 }
 
 export async function getAllProjectsService({ ordered } = { ordered: false }) {
-  const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
-
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "read")) {
-    throw new AuthorizationError()
-  }
-  return getAllProjects(userWhereClause(user), {
+  if (!permissions.can("project", "read")) return []
+
+  return getAllProjects(permissions.toDrizzleWhere("project", "read"), {
     ordered,
   })
 }
@@ -95,22 +101,4 @@ export async function getProjectByIdService(id: string) {
   }
 
   return project
-}
-
-// PERMISSION:
-function userWhereClause(user: Pick<User, "role" | "department">) {
-  const role = user.role
-  switch (role) {
-    case "author":
-    case "viewer":
-    case "editor":
-      return or(
-        eq(ProjectTable.department, user.department),
-        isNull(ProjectTable.department),
-      )
-    case "admin":
-      return undefined
-    default:
-      throw new Error(`Unhandled user role: ${role satisfies never}`)
-  }
 }
