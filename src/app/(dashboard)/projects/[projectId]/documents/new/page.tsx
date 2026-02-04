@@ -2,31 +2,21 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
-import { getProjectById } from "@/dal/projects/queries"
 import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
+import { getProjectByIdService } from "@/services/projects"
 
 export default async function NewDocumentPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/new">) {
   const { projectId } = await params
 
-  const project = await getProjectById(projectId)
+  const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
-    return redirect(`/`)
-  }
-
-  // PERMISSION:
-  if (user.role !== "author" && user.role !== "admin") {
+  if (user == null || (user.role !== "author" && user.role !== "admin")) {
     return redirect(`/projects/${projectId}`)
   }
 

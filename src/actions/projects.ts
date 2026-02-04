@@ -1,30 +1,17 @@
 "use server"
 
-import { getCurrentUser } from "@/lib/session"
 import { redirect } from "next/navigation"
-import { projectSchema, type ProjectFormValues } from "../schemas/projects"
-import {
-  createProject,
-  deleteProject,
-  updateProject,
-} from "@/dal/projects/mutations"
+import { type ProjectFormValues } from "../schemas/projects"
 import { tryFn } from "@/lib/helpers"
 import { revalidatePath } from "next/cache"
+import {
+  createProjectService,
+  deleteProjectService,
+  updateProjectService,
+} from "@/services/projects"
 
 export async function createProjectAction(data: ProjectFormValues) {
-  const user = await getCurrentUser()
-  if (user == null) return { message: "Not authenticated" }
-
-  const result = projectSchema.safeParse(data)
-  if (!result.success) return { message: "Invalid data" }
-
-  const [error, project] = await tryFn(() =>
-    createProject({
-      ...result.data,
-      ownerId: user.id,
-      department: result.data.department || null,
-    }),
-  )
+  const [error, project] = await tryFn(() => createProjectService(data))
   if (error) return error
 
   revalidatePath(`/projects/${project.id}`)
@@ -35,10 +22,7 @@ export async function updateProjectAction(
   projectId: string,
   data: ProjectFormValues,
 ) {
-  const result = projectSchema.safeParse(data)
-  if (!result.success) return { message: "Invalid data" }
-
-  const [error] = await tryFn(() => updateProject(projectId, result.data))
+  const [error] = await tryFn(() => updateProjectService(projectId, data))
   if (error) return error
 
   revalidatePath(`/projects/${projectId}`)
@@ -46,7 +30,7 @@ export async function updateProjectAction(
 }
 
 export async function deleteProjectAction(projectId: string) {
-  const [error] = await tryFn(() => deleteProject(projectId))
+  const [error] = await tryFn(() => deleteProjectService(projectId))
   if (error) return error
 
   revalidatePath(`/projects/${projectId}`)
