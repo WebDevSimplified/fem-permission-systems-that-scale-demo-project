@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import { PlusIcon, LockIcon, FileTextIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectById } from "@/dal/projects/queries"
 import { getProjectDocuments } from "@/dal/documents/queries"
+import { getCurrentUser } from "@/lib/session"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -20,8 +21,10 @@ export default async function ProjectDocumentsPage({
   const { projectId } = await params
   const project = await getProjectById(projectId)
   if (project == null) return notFound()
+  // FIX: Not checking if user has access to project
 
   const documents = await getProjectDocuments(projectId)
+  const user = await getCurrentUser()
 
   return (
     <div className="space-y-6">
@@ -33,15 +36,22 @@ export default async function ProjectDocumentsPage({
           )}
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/projects/${projectId}/documents/new`}>
-              <PlusIcon className="size-4" />
-              New Document
-            </Link>
-          </Button>
+          {/* PERMISSION: */}
+          {user?.role === "admin" && (
+            <Button asChild variant="outline">
+              <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
+            </Button>
+          )}
+          {/* PERMISSION: */}
+          {/* FIX: Missing admin role check */}
+          {user?.role === "author" && (
+            <Button asChild>
+              <Link href={`/projects/${projectId}/documents/new`}>
+                <PlusIcon className="size-4" />
+                New Document
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -53,6 +63,7 @@ export default async function ProjectDocumentsPage({
             <p className="text-muted-foreground mb-4">
               Create your first document in this project.
             </p>
+            {/* FIX: Missing permission check */}
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4 mr-2" />
