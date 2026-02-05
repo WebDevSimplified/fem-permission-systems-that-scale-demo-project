@@ -6,7 +6,7 @@ import { DocumentForm } from "@/components/document-form"
 import { getCurrentUser } from "@/lib/session"
 import { getDocumentByIdService } from "@/services/documents"
 import { getProjectByIdService } from "@/services/projects"
-import { can } from "@/permissions/rbac"
+import { canUpdateDocument } from "@/permissions/documents"
 
 export default async function EditDocumentPage({
   params,
@@ -16,14 +16,14 @@ export default async function EditDocumentPage({
   const project = await getProjectByIdService(projectId)
   if (project == null) return notFound()
 
-  // PERMISSION:
-  const user = await getCurrentUser()
-  if (!can(user, "document:update")) {
-    return redirect(`/projects/${projectId}`)
-  }
-
   const document = await getDocumentByIdService(documentId)
   if (document == null) return notFound()
+
+  // PERMISSION:
+  const user = await getCurrentUser()
+  if (!canUpdateDocument(user, document)) {
+    return redirect(`/projects/${projectId}`)
+  }
 
   return (
     <div className="space-y-6">

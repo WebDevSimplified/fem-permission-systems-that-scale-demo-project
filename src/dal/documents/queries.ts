@@ -1,6 +1,6 @@
 import { db } from "@/drizzle/db"
 import { DocumentTable, UserTable } from "@/drizzle/schema"
-import { eq } from "drizzle-orm"
+import { and, eq, SQL } from "drizzle-orm"
 
 export async function getDocumentById(id: string) {
   return db.query.DocumentTable.findFirst({
@@ -8,7 +8,10 @@ export async function getDocumentById(id: string) {
   })
 }
 
-export async function getProjectDocuments(projectId: string) {
+export async function getProjectDocuments(
+  whereClause: SQL | undefined,
+  projectId: string,
+) {
   return db
     .select({
       id: DocumentTable.id,
@@ -23,7 +26,7 @@ export async function getProjectDocuments(projectId: string) {
     })
     .from(DocumentTable)
     .innerJoin(UserTable, eq(DocumentTable.creatorId, UserTable.id))
-    .where(eq(DocumentTable.projectId, projectId))
+    .where(and(whereClause, eq(DocumentTable.projectId, projectId)))
     .orderBy(DocumentTable.createdAt)
 }
 
