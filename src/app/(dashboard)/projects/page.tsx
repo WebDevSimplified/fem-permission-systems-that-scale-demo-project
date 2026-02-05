@@ -1,8 +1,8 @@
+import { getAllProjectsService } from "@/services/projects"
 import { redirect } from "next/navigation"
-import { getAllProjects } from "@/dal/projects/queries"
 
 export default async function ProjectsPage() {
-  const projects = await getAllProjects()
+  const projects = await getAllProjectsService()
 
   if (projects.length > 0) {
     redirect(`/projects/${projects[0].id}`)
