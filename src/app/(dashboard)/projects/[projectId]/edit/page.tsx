@@ -14,6 +14,7 @@ import {
 import { ProjectForm } from "@/components/project-form"
 import { getCurrentUser } from "@/lib/session"
 import { getProjectByIdService } from "@/services/projects"
+import { can } from "@/permissions/rbac"
 
 export default async function EditProjectPage({
   params,
@@ -25,7 +26,7 @@ export default async function EditProjectPage({
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user?.role !== "admin") {
+  if (!can(user, "project:update")) {
     return redirect("/")
   }
 
@@ -48,7 +49,7 @@ export default async function EditProjectPage({
         <ProjectForm project={project} />
 
         {/* PERMISSION: */}
-        {user.role === "admin" && (
+        {can(user, "project:delete") && (
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">Danger Zone</CardTitle>

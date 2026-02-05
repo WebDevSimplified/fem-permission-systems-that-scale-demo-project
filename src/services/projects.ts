@@ -7,6 +7,8 @@ import { getAllProjects, getProjectById } from "@/dal/projects/queries"
 import { ProjectTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
+import { canReadProject } from "@/permissions/projects"
+import { can } from "@/permissions/rbac"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
 import { eq, isNull, or } from "drizzle-orm"
 
@@ -15,7 +17,7 @@ export async function createProjectService(data: ProjectFormValues) {
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role !== "admin") {
+  if (!can(user, "project:create")) {
     throw new AuthorizationError()
   }
 
@@ -37,7 +39,7 @@ export async function updateProjectService(
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role !== "admin") {
+  if (!can(user, "project:update")) {
     throw new AuthorizationError()
   }
 
@@ -55,7 +57,7 @@ export async function deleteProjectService(projectId: string) {
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role !== "admin") {
+  if (!can(user, "project:delete")) {
     throw new AuthorizationError()
   }
 
@@ -76,12 +78,7 @@ export async function getProjectByIdService(id: string) {
 
   // PERMISSION:
   const user = await getCurrentUser()
-  if (
-    user == null ||
-    (user.role !== "admin" &&
-      project.department != null &&
-      user.department !== project.department)
-  ) {
+  if (!canReadProject(user, project)) {
     return null
   }
 
