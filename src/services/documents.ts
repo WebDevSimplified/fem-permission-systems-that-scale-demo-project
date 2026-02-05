@@ -11,8 +11,7 @@ import {
 import { DocumentTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { canReadDocument, canUpdateDocument } from "@/permissions/documents"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
 import { eq, ne, or } from "drizzle-orm"
 
@@ -24,7 +23,8 @@ export async function createDocumentService(
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (!can(user, "document:create")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "create")) {
     throw new AuthorizationError()
   }
 
@@ -50,7 +50,8 @@ export async function updateDocumentService(
   if (document == null) throw new Error("No document")
 
   // PERMISSION:
-  if (!canUpdateDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "update", document)) {
     throw new AuthorizationError()
   }
 
@@ -64,11 +65,12 @@ export async function updateDocumentService(
 }
 
 export async function deleteDocumentService(documentId: string) {
-  const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  const document = await getDocumentById(documentId)
+  if (document == null) throw new Error("No document")
 
   // PERMISSION:
-  if (!can(user, "document:delete")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "delete", document)) {
     throw new AuthorizationError()
   }
 
@@ -80,9 +82,9 @@ export async function getDocumentByIdService(id: string) {
   if (document == null) return null
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!canReadDocument(user, document)) {
-    throw new AuthorizationError()
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read", document)) {
+    return null
   }
 
   return document
@@ -95,6 +97,11 @@ export async function getProjectDocumentsService(projectId: string) {
     return []
   }
 
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read")) {
+    return []
+  }
+
   return getProjectDocuments(userWhereClause(user), projectId)
 }
 
@@ -103,8 +110,8 @@ export async function getDocumentWithUserInfoService(id: string) {
   if (document == null) return null
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!canReadDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "read", document)) {
     return null
   }
 

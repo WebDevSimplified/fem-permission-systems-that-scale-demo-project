@@ -3,9 +3,8 @@ import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { DocumentForm } from "@/components/document-form"
-import { getCurrentUser } from "@/lib/session"
 import { getProjectByIdService } from "@/services/projects"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function NewDocumentPage({
   params,
@@ -16,8 +15,8 @@ export default async function NewDocumentPage({
   if (project == null) return notFound()
 
   // PERMISSION:
-  const user = await getCurrentUser()
-  if (!can(user, "document:create")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "create")) {
     return redirect(`/projects/${projectId}`)
   }
 

@@ -13,16 +13,19 @@ import { logout } from "@/actions/auth"
 import { ActionButton } from "@/components/ui/action-button"
 import { getRoleBadgeVariant } from "@/lib/helpers"
 import { getAllProjectsService } from "@/services/projects"
+import { getUserPermissions } from "@/permissions/abac"
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser()
   if (user == null) redirect("/")
 
   const projects = await getAllProjectsService({ ordered: true })
+  const permissions = await getUserPermissions()
+  const canCreateProject = permissions.can("project", "create")
 
   return (
     <SidebarProvider>
-      <AppSidebar projects={projects} user={user} />
+      <AppSidebar projects={projects} canCreateProject={canCreateProject} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="md:-ml-1" />
