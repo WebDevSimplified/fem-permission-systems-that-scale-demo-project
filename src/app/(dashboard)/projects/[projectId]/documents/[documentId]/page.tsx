@@ -19,6 +19,18 @@ export default async function DocumentDetailPage({
   const document = await getDocumentWithUserInfoService(documentId)
   if (document == null) return notFound()
 
+  const canView = {
+    creator: permissions.can("document", "read", document, "creatorId"),
+    createdAt: permissions.can("document", "read", document, "createdAt"),
+    lastedEditedBy: permissions.can(
+      "document",
+      "read",
+      document,
+      "lastEditedById",
+    ),
+    updatedAt: permissions.can("document", "read", document, "updatedAt"),
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -72,35 +84,48 @@ export default async function DocumentDetailPage({
         {document.content}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Created by</span>
-              <p className="font-medium">{document.creator.name}</p>
+      {(canView.createdAt ||
+        canView.creator ||
+        canView.lastedEditedBy ||
+        canView.updatedAt) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {canView.creator && (
+                <div>
+                  <span className="text-muted-foreground">Created by</span>
+                  <p className="font-medium">{document.creator.name}</p>
+                </div>
+              )}
+              {canView.lastedEditedBy && (
+                <div>
+                  <span className="text-muted-foreground">Last edited by</span>
+                  <p className="font-medium">{document.lastEditedBy.name}</p>
+                </div>
+              )}
+              {canView.createdAt && (
+                <div>
+                  <span className="text-muted-foreground">Created at</span>
+                  <p className="font-medium">
+                    {document.createdAt.toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+              {canView.updatedAt && (
+                <div>
+                  <span className="text-muted-foreground">Last updated</span>
+                  <p className="font-medium">
+                    {document.updatedAt.toLocaleDateString()}
+                  </p>
+                </div>
+              )}
             </div>
-            <div>
-              <span className="text-muted-foreground">Last edited by</span>
-              <p className="font-medium">{document.lastEditedBy.name}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Created at</span>
-              <p className="font-medium">
-                {document.createdAt.toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Last updated</span>
-              <p className="font-medium">
-                {document.updatedAt.toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

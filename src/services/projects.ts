@@ -4,12 +4,10 @@ import {
   updateProject,
 } from "@/dal/projects/mutations"
 import { getAllProjects, getProjectById } from "@/dal/projects/queries"
-import { ProjectTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
 import { getUserPermissions } from "@/permissions/abac"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
-import { eq, isNull, or } from "drizzle-orm"
 
 export async function createProjectService(data: ProjectFormValues) {
   const user = await getCurrentUser()
@@ -76,7 +74,9 @@ export async function getAllProjectsService({ ordered } = { ordered: false }) {
     return []
   }
 
-  return getAllProjects(userWhereClause(user), { ordered })
+  return getAllProjects(permissions.toDrizzleWhere("project", "read"), {
+    ordered,
+  })
 }
 
 export async function getProjectByIdService(id: string) {
@@ -90,22 +90,4 @@ export async function getProjectByIdService(id: string) {
   }
 
   return project
-}
-
-// PERMISSION:
-function userWhereClause(user: Pick<User, "role" | "department">) {
-  const role = user.role
-  switch (role) {
-    case "author":
-    case "viewer":
-    case "editor":
-      return or(
-        eq(ProjectTable.department, user.department),
-        isNull(ProjectTable.department),
-      )
-    case "admin":
-      return undefined
-    default:
-      throw new Error(`Unhandled user role: ${role satisfies never}`)
-  }
 }
