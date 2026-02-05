@@ -1,23 +1,38 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { getProjectById } from "@/dal/projects/queries"
 import { getDocumentById } from "@/dal/documents/queries"
 import { DocumentForm } from "@/components/document-form"
+import { getCurrentUser } from "@/lib/session"
 
 export default async function EditDocumentPage({
   params,
 }: PageProps<"/projects/[projectId]/documents/[documentId]/edit">) {
   const { projectId, documentId } = await params
 
-  const document = await getDocumentById(documentId)
-  if (document == null) return notFound()
-
   const project = await getProjectById(projectId)
   if (project == null) return notFound()
-  // FIX: Not checking permissions
-  // FIX: Not checking if user has access to project
+
+  // PERMISSION:
+  const user = await getCurrentUser()
+  if (
+    user == null ||
+    (user.role !== "admin" &&
+      project.department != null &&
+      user.department !== project.department)
+  ) {
+    return redirect(`/`)
+  }
+
+  // PERMISSION:
+  if (user.role === "viewer") {
+    return redirect(`/projects/${projectId}`)
+  }
+
+  const document = await getDocumentById(documentId)
+  if (document == null) return notFound()
 
   return (
     <div className="space-y-6">
