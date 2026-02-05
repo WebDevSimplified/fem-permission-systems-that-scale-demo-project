@@ -9,6 +9,8 @@ import {
   updateDocument,
 } from "@/dal/documents/mutations"
 import { tryFn } from "@/lib/helpers"
+import { getUserPermissions } from "@/permissions/abac"
+import { getDocumentById } from "@/dal/documents/queries"
 
 export async function createDocumentAction(
   projectId: string,
@@ -42,7 +44,17 @@ export async function updateDocumentAction(
   const user = await getCurrentUser()
   if (user == null) return { message: "Not authenticated" }
 
-  const result = documentSchema.safeParse(data)
+  const document = await getDocumentById(documentId)
+  if (document == null) return { message: "No doc" }
+
+  const permissions = getUserPermissions(user)
+  const restrictedFields = permissions.pickPermittedFields(
+    "document",
+    "update",
+    data,
+    document,
+  )
+  const result = documentSchema.safeParse(restrictedFields)
   if (!result.success) return { message: "Invalid data" }
 
   const [error] = await tryFn(() =>

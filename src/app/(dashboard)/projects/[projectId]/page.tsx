@@ -82,30 +82,42 @@ export default async function ProjectDocumentsPage({
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {documents.map(doc => (
-            <Link
-              key={doc.id}
-              href={`/projects/${projectId}/documents/${doc.id}`}
-            >
-              <Card className="h-full transition-colors hover:bg-muted/50">
-                <CardHeader className="gap-0">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{doc.title}</CardTitle>
-                    {doc.isLocked && (
-                      <LockIcon className="size-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <CardDescription>{doc.creator.name}</CardDescription>
-                  <div className="flex items-center gap-2 pt-2">
-                    <Badge variant={getStatusBadgeVariant(doc.status)}>
-                      {doc.status}
-                    </Badge>
-                    {doc.isLocked && <Badge variant="outline">locked</Badge>}
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-          ))}
+          {documents.map(doc => {
+            const canView = {
+              isLocked: permissions.can(
+                "document",
+                "read",
+                { ...doc, creatorId: doc.creator.id, projectId },
+                "isLocked",
+              ),
+            }
+            return (
+              <Link
+                key={doc.id}
+                href={`/projects/${projectId}/documents/${doc.id}`}
+              >
+                <Card className="h-full transition-colors hover:bg-muted/50">
+                  <CardHeader className="gap-0">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg">{doc.title}</CardTitle>
+                      {canView.isLocked && doc.isLocked && (
+                        <LockIcon className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <CardDescription>{doc.creator.name}</CardDescription>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Badge variant={getStatusBadgeVariant(doc.status)}>
+                        {doc.status}
+                      </Badge>
+                      {canView.isLocked && doc.isLocked && (
+                        <Badge variant="outline">locked</Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

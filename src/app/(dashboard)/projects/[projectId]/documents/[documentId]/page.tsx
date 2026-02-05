@@ -36,6 +36,10 @@ export default async function DocumentDetailPage({
     return redirect("/")
   }
 
+  const canView = {
+    isLocked: permissions.can("document", "read", document, "isLocked"),
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -48,7 +52,7 @@ export default async function DocumentDetailPage({
         <div className="flex-1 flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{document.title}</h1>
-            {document.isLocked && (
+            {canView.isLocked && document.isLocked && (
               <LockIcon className="size-5 text-muted-foreground" />
             )}
           </div>
@@ -56,7 +60,9 @@ export default async function DocumentDetailPage({
             <Badge variant={getStatusBadgeVariant(document.status)}>
               {document.status}
             </Badge>
-            {document.isLocked && <Badge variant="outline">Locked</Badge>}
+            {canView.isLocked && document.isLocked && (
+              <Badge variant="outline">Locked</Badge>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
