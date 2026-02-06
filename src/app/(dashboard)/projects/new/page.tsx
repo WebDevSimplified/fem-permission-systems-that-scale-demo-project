@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeftIcon } from "lucide-react"
 import { ProjectForm } from "@/components/project-form"
 import { redirect } from "next/navigation"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 
 export default async function NewProjectPage() {
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "create")) return redirect(`/`)
+  if (!permissions.can("create", "project")) return redirect(`/`)
 
   return (
     <div className="space-y-6">
