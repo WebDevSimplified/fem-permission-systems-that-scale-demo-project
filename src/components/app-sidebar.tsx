@@ -31,7 +31,6 @@ export function AppSidebar({ projects, canCreateProject }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between">
             Projects
-            {/* PERMISSION: */}
             {canCreateProject && (
               <Button variant="ghost" size="icon-xs" asChild>
                 <Link href="/projects/new">

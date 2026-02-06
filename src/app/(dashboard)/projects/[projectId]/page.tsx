@@ -13,7 +13,7 @@ import { PlusIcon, LockIcon, FileTextIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectByIdService } from "@/services/projects"
 import { getProjectDocumentsService } from "@/services/documents"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -36,13 +36,13 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {permissions.can("project", "update", project) && (
+          {permissions.can("update", project) && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>
           )}
           {/* PERMISSION: */}
-          {permissions.can("document", "create") && (
+          {permissions.can("create", "document") && (
             <Button asChild>
               <Link href={`/projects/${projectId}/documents/new`}>
                 <PlusIcon className="size-4" />
@@ -62,7 +62,7 @@ export default async function ProjectDocumentsPage({
               Create your first document in this project.
             </p>
             {/* PERMISSION: */}
-            {permissions.can("document", "create") && (
+            {permissions.can("create", "document") && (
               <Button asChild>
                 <Link href={`/projects/${projectId}/documents/new`}>
                   <PlusIcon className="size-4 mr-2" />

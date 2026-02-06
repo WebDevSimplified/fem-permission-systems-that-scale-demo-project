@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card"
 import { ProjectForm } from "@/components/project-form"
 import { getProjectByIdService } from "@/services/projects"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 
 export default async function EditProjectPage({
   params,
@@ -25,7 +25,7 @@ export default async function EditProjectPage({
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("project", "update", project)) {
+  if (!permissions.can("update", project)) {
     return redirect("/")
   }
 
@@ -48,7 +48,7 @@ export default async function EditProjectPage({
         <ProjectForm project={project} />
 
         {/* PERMISSION: */}
-        {permissions.can("project", "delete", project) && (
+        {permissions.can("delete", project) && (
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">Danger Zone</CardTitle>

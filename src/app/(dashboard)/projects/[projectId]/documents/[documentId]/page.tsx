@@ -8,7 +8,7 @@ import { deleteDocumentAction } from "@/actions/documents"
 import { ArrowLeftIcon, LockIcon, PencilIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfoService } from "@/services/documents"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 
 export default async function DocumentDetailPage({
   params,
@@ -20,15 +20,10 @@ export default async function DocumentDetailPage({
   if (document == null) return notFound()
 
   const canView = {
-    creator: permissions.can("document", "read", document, "creatorId"),
-    createdAt: permissions.can("document", "read", document, "createdAt"),
-    lastedEditedBy: permissions.can(
-      "document",
-      "read",
-      document,
-      "lastEditedById",
-    ),
-    updatedAt: permissions.can("document", "read", document, "updatedAt"),
+    creator: permissions.can("read", document, "creatorId"),
+    createdAt: permissions.can("read", document, "createdAt"),
+    lastedEditedBy: permissions.can("read", document, "lastEditedById"),
+    updatedAt: permissions.can("read", document, "updatedAt"),
   }
 
   return (
@@ -56,7 +51,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {permissions.can("document", "update", document) && (
+          {permissions.can("update", document) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -67,7 +62,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {permissions.can("document", "delete", document) && (
+          {permissions.can("delete", document) && (
             <ActionButton
               variant="destructive"
               requireAreYouSure

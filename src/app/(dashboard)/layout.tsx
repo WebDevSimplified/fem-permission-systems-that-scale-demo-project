@@ -13,7 +13,7 @@ import { logout } from "@/actions/auth"
 import { ActionButton } from "@/components/ui/action-button"
 import { getRoleBadgeVariant } from "@/lib/helpers"
 import { getAllProjectsService } from "@/services/projects"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
 
 export default async function DashboardLayout({ children }: LayoutProps<"/">) {
   const user = await getCurrentUser()
