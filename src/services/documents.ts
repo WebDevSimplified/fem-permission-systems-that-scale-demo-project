@@ -11,13 +11,13 @@ import {
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
 import {
-  CaslSubject,
   getUserPermissions,
   pickPermittedFields,
   toDrizzleWhere,
 } from "@/permissions/casl"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
 import { DocumentInsertData, DocumentTable } from "@/drizzle/schema"
+import { subject } from "@casl/ability"
 
 export async function createDocumentService(
   projectId: string,
@@ -41,11 +41,10 @@ export async function createDocumentService(
     creatorId: user.id,
     lastEditedById: user.id,
     projectId,
-    __caslType: "document",
-  } satisfies CaslSubject & DocumentInsertData
+  } satisfies DocumentInsertData
 
   // PERMISSION:
-  if (!permissions.can("create", newDocument)) {
+  if (!permissions.can("create", subject("document", newDocument))) {
     throw new AuthorizationError()
   }
 
@@ -63,18 +62,18 @@ export async function updateDocumentService(
 
   const document = await getDocumentById(documentId)
   if (document == null) throw new Error("Document not found")
-  const caslDocument = {
-    ...document,
-    __caslType: "document",
-  } satisfies CaslSubject
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("update", caslDocument)) {
+  if (!permissions.can("update", subject("document", document))) {
     throw new AuthorizationError()
   }
 
-  const restrictedData = await pickPermittedFields("update", caslDocument, data)
+  const restrictedData = await pickPermittedFields(
+    "update",
+    subject("document", document),
+    data,
+  )
   const result = documentSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
 
@@ -87,7 +86,7 @@ export async function deleteDocumentService(documentId: string) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("delete", { ...document, __caslType: "document" })) {
+  if (!permissions.can("delete", subject("document", document))) {
     throw new AuthorizationError()
   }
 
@@ -97,35 +96,27 @@ export async function deleteDocumentService(documentId: string) {
 export async function getDocumentByIdService(id: string) {
   const document = await getDocumentById(id)
   if (document == null) return null
-  const caslDocument = {
-    ...document,
-    __caslType: "document",
-  } satisfies CaslSubject
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("read", caslDocument)) {
+  if (!permissions.can("read", subject("document", { ...document }))) {
     return null
   }
 
-  return caslDocument
+  return document
 }
 
 export async function getDocumentWithUserInfoService(id: string) {
   const document = await getDocumentWithUserInfo(id)
   if (document == null) return null
-  const caslDocument = {
-    ...document,
-    __caslType: "document",
-  } satisfies CaslSubject
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("read", caslDocument)) {
+  if (!permissions.can("read", subject("document", { ...document }))) {
     return null
   }
 
-  return caslDocument
+  return document
 }
 
 export async function getProjectDocumentsService(projectId: string) {
@@ -135,16 +126,8 @@ export async function getProjectDocumentsService(projectId: string) {
     return []
   }
 
-  const docs = await getProjectDocuments(
+  return getProjectDocuments(
     projectId,
     await toDrizzleWhere("read", "document", DocumentTable),
-  )
-
-  return docs.map(
-    doc =>
-      ({
-        ...doc,
-        __caslType: "document",
-      }) satisfies CaslSubject,
   )
 }

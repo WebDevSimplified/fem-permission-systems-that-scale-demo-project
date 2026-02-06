@@ -14,6 +14,7 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectByIdService } from "@/services/projects"
 import { getProjectDocumentsService } from "@/services/documents"
 import { getUserPermissions } from "@/permissions/casl"
+import { subject } from "@casl/ability"
 
 export default async function ProjectDocumentsPage({
   params,
@@ -36,7 +37,7 @@ export default async function ProjectDocumentsPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {permissions.can("update", project) && (
+          {permissions.can("update", subject("project", { ...project })) && (
             <Button asChild variant="outline">
               <Link href={`/projects/${projectId}/edit`}>Edit Project</Link>
             </Button>

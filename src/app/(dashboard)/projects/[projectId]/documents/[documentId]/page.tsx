@@ -10,6 +10,7 @@ import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getProjectByIdService } from "@/services/projects"
 import { getDocumentWithUserInfoService } from "@/services/documents"
 import { getUserPermissions } from "@/permissions/casl"
+import { subject } from "@casl/ability"
 
 export default async function DocumentDetailPage({
   params,
@@ -24,10 +25,26 @@ export default async function DocumentDetailPage({
 
   const permissions = await getUserPermissions()
   const canReadField = {
-    creator: permissions.can("read", document, "creatorId"),
-    lastEditedBy: permissions.can("read", document, "lastEditedById"),
-    createdAt: permissions.can("read", document, "createdAt"),
-    updatedAt: permissions.can("read", document, "updatedAt"),
+    creator: permissions.can(
+      "read",
+      subject("document", { ...document }),
+      "creatorId",
+    ),
+    lastEditedBy: permissions.can(
+      "read",
+      subject("document", { ...document }),
+      "lastEditedById",
+    ),
+    createdAt: permissions.can(
+      "read",
+      subject("document", { ...document }),
+      "createdAt",
+    ),
+    updatedAt: permissions.can(
+      "read",
+      subject("document", { ...document }),
+      "updatedAt",
+    ),
   }
 
   return (
@@ -55,7 +72,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {permissions.can("update", document) && (
+          {permissions.can("update", subject("document", { ...document })) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -66,7 +83,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {permissions.can("delete", document) && (
+          {permissions.can("delete", subject("document", { ...document })) && (
             <ActionButton
               variant="destructive"
               requireAreYouSure

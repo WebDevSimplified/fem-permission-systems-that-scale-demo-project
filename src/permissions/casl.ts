@@ -1,4 +1,4 @@
-import { getAllProjects } from "@/dal/projects"
+import { getAllProjects } from "@/dal/projects/queries"
 import { Document, Project, ProjectTable, User } from "@/drizzle/schema"
 import { getCurrentUser } from "@/lib/session"
 import { and, eq, isNull, or, SQL } from "drizzle-orm"
@@ -10,13 +10,11 @@ import { CompoundCondition, Condition, FieldCondition } from "@ucast/core"
 
 export const getUserPermissions = cache(getUserPermissionsInternal)
 
-export type CaslSubject = { __caslType: "document" | "project" }
 type FullCRUD = "create" | "read" | "update" | "delete"
-type ProjectSubject = "project" | (Pick<Project, "department"> & CaslSubject)
+type ProjectSubject = "project" | Pick<Project, "department">
 type DocumentSubject =
   | "document"
-  | (Pick<Document, "projectId" | "creatorId" | "status" | "isLocked"> &
-      CaslSubject)
+  | Pick<Document, "projectId" | "creatorId" | "status" | "isLocked">
 
 type MyAbility = MongoAbility<
   [FullCRUD, ProjectSubject] | [FullCRUD, DocumentSubject]
@@ -29,7 +27,7 @@ async function getUserPermissionsInternal() {
   )
   const user = await getCurrentUser()
   if (user == null) {
-    return build({ detectSubjectType: object => object.__caslType })
+    return build()
   }
 
   const isWeekend = new Date().getDay() === 6 || new Date().getDay() === 0
@@ -51,7 +49,7 @@ async function getUserPermissionsInternal() {
       throw new Error(`Unknown role: ${role satisfies never}`)
   }
 
-  return build({ detectSubjectType: object => object.__caslType })
+  return build()
 }
 
 function addAdminPermissions(allow: AllowFunction) {
