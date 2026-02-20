@@ -8,11 +8,12 @@ This project is broken down into different phases which correspond to specific G
 
 - `1-basic-permissions`
 - `2-fix-basic-permission-errors`
-- `3-basic-rbac`
-- `4-rbac-limits`
-- `5-abac-basic`
-- `6-abac-advanced`
-- `7-casl`
+- `3-add-service-layer`
+- `4-basic-rbac`
+- `5-rbac-limits`
+- `6-basic-abac`
+- `7-advanced-abac`
+- `8-casl`
 
 ## 🚀 Getting Started
 
@@ -80,12 +81,6 @@ Populate the database with sample users, projects, and documents:
 ```bash
 npm run db:seed
 ```
-
-This creates:
-
-- **8 users** across two departments (Engineering and Marketing)
-- **5 projects** with different department assignments
-- **15+ documents** with various statuses and ownership
 
 ### 7. Start the Development Server
 
@@ -180,24 +175,15 @@ Here are the key parts of the codebase:
 ```text
 src/
 ├── actions/          # Server actions (form submissions)
-│   ├── auth.ts       # Authentication actions
 │   ├── documents.ts  # Document CRUD operations
 │   └── projects.ts   # Project CRUD operations
 ├── app/              # Next.js app router pages
-│   ├── (dashboard)/  # Protected dashboard routes
-│   └── page.tsx      # Login page
 ├── dal/              # Data access layer
 │   ├── documents/    # Document queries and mutations
 │   ├── projects/     # Project queries and mutations
-│   └── users/        # User queries
 ├── drizzle/          # Database schema and migrations
 │   ├── schema/       # Entity schemas
-│   ├── db.ts         # Database connection
-│   └── seed.ts       # Sample data seeding
 └── components/       # React components
-    ├── app-sidebar.tsx
-    ├── document-form.tsx
-    ├── project-form.tsx
     └── ui/           # shadcn/ui components
 ```
 
