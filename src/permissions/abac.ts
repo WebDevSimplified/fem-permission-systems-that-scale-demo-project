@@ -1,26 +1,34 @@
 import { getAllProjects } from "@/dal/projects/queries"
-import { Document, Project, ProjectTable, User } from "@/drizzle/schema"
+import {
+  Document,
+  DocumentTable,
+  Project,
+  ProjectTable,
+  User,
+} from "@/drizzle/schema"
 import { getCurrentUser } from "@/lib/session"
-import { eq, isNull, or } from "drizzle-orm"
+import { and, eq, isNull, or } from "drizzle-orm"
+import { PgTableWithColumns } from "drizzle-orm/pg-core"
 import { cache } from "react"
 
 export const getUserPermissions = cache(getUserPermissionsInternal)
 
 async function getUserPermissionsInternal() {
-  const user = await getCurrentUser()
   const builder = new PermissionBuilder()
+  const user = await getCurrentUser()
   if (user == null) return builder.build()
 
+  const isWeekend = new Date().getDay() === 6 || new Date().getDay() === 0
   const role = user.role
   switch (role) {
     case "admin":
       addAdminPermissions(builder)
       break
     case "author":
-      await addAuthorPermissions(builder, user)
+      await addAuthorPermissions(builder, user, isWeekend)
       break
     case "editor":
-      await addEditorPermissions(builder, user)
+      await addEditorPermissions(builder, user, isWeekend)
       break
     case "viewer":
       await addViewerPermissions(builder, user)
@@ -47,6 +55,7 @@ function addAdminPermissions(builder: PermissionBuilder) {
 async function addEditorPermissions(
   builder: PermissionBuilder,
   user: Pick<User, "department">,
+  isWeekend: boolean,
 ) {
   builder
     .allow("project", "read", { department: user.department })
@@ -54,15 +63,23 @@ async function addEditorPermissions(
 
   const projects = await getDepartmentProjects(user.department)
   projects.forEach(project => {
-    builder
-      .allow("document", "read", { projectId: project.id })
-      .allow("document", "update", { isLocked: false, projectId: project.id })
+    builder.allow("document", "read", { projectId: project.id })
+
+    if (!isWeekend) {
+      builder.allow(
+        "document",
+        "update",
+        { isLocked: false, projectId: project.id },
+        ["content", "title", "status"],
+      )
+    }
   })
 }
 
 async function addAuthorPermissions(
   builder: PermissionBuilder,
   user: Pick<User, "department" | "id">,
+  isWeekend: boolean,
 ) {
   builder
     .allow("project", "read", { department: user.department })
@@ -78,13 +95,20 @@ async function addAuthorPermissions(
         creatorId: user.id,
         projectId: project.id,
       })
-      .allow("document", "create", { projectId: project.id })
-      .allow("document", "update", {
-        creatorId: user.id,
-        isLocked: false,
-        status: "draft",
-        projectId: project.id,
-      })
+
+    if (!isWeekend) {
+      builder.allow("document", "create", { projectId: project.id }).allow(
+        "document",
+        "update",
+        {
+          creatorId: user.id,
+          isLocked: false,
+          status: "draft",
+          projectId: project.id,
+        },
+        ["content", "title"],
+      )
+    }
   })
 }
 
@@ -99,12 +123,22 @@ async function addViewerPermissions(
   const projects = await getDepartmentProjects(user.department)
   projects.forEach(project => {
     builder
-      .allow("document", "read", { status: "published", projectId: project.id })
-      .allow("document", "read", { status: "archived", projectId: project.id })
+      .allow(
+        "document",
+        "read",
+        { status: "published", projectId: project.id },
+        ["content", "title", "status", "isLocked", "id", "projectId"],
+      )
+      .allow(
+        "document",
+        "read",
+        { status: "archived", projectId: project.id },
+        ["content", "title", "status", "isLocked", "id", "projectId"],
+      )
   })
 }
 
-const getDepartmentProjects = cache((department: string) => {
+const getDepartmentProjects = cache(async (department: string) => {
   return getAllProjects(
     or(
       eq(ProjectTable.department, department),
@@ -116,10 +150,12 @@ const getDepartmentProjects = cache((department: string) => {
 type Resources = {
   project: {
     action: "create" | "read" | "update" | "delete"
+    data: Project
     condition: Pick<Project, "department">
   }
   document: {
     action: "create" | "read" | "update" | "delete"
+    data: Document
     condition: Pick<Document, "projectId" | "creatorId" | "status" | "isLocked">
   }
 }
@@ -127,6 +163,7 @@ type Resources = {
 type Permission<Res extends keyof Resources> = {
   action: Resources[Res]["action"]
   condition?: Partial<Resources[Res]["condition"]>
+  fields?: (keyof Resources[Res]["data"])[]
 }
 
 type PermissionStore = {
@@ -143,8 +180,9 @@ class PermissionBuilder {
     resource: Res,
     action: Permission<Res>["action"],
     condition?: Permission<Res>["condition"],
+    fields?: Permission<Res>["fields"],
   ) {
-    this.#permissions[resource].push({ action, condition })
+    this.#permissions[resource].push({ action, condition, fields })
     return this
   }
 
@@ -156,6 +194,7 @@ class PermissionBuilder {
         resource: Res,
         action: Resources[Res]["action"],
         data?: Resources[Res]["condition"],
+        field?: keyof Resources[Res]["data"],
       ) {
         return permissions[resource].some(perm => {
           if (perm.action !== action) return false
@@ -168,8 +207,77 @@ class PermissionBuilder {
                 data[key as keyof typeof perm.condition] === value,
             )
 
+          if (!validData) return false
+
+          const validFields =
+            perm.fields == null || field == null || perm.fields.includes(field)
+
+          return validFields
+        })
+      },
+      pickPermittedFields<Res extends keyof Resources>(
+        resource: Res,
+        action: Resources[Res]["action"],
+        newData: Partial<Resources[Res]["data"]>,
+        data?: Resources[Res]["condition"],
+      ): Partial<Resources[Res]["data"]> {
+        const perms = permissions[resource].filter(perm => {
+          if (perm.action !== action) return false
+
+          const validData =
+            perm.condition == null ||
+            data == null ||
+            Object.entries(perm.condition).every(
+              ([key, value]) => data[key as keyof typeof data] === value,
+            )
+
           return validData
         })
+
+        // No permissions found
+        if (perms.length === 0) return {}
+
+        // No field restrictions on permissions
+        const unrestricted = perms.filter(perm => perm.fields == null)
+        if (unrestricted.length > 0) return newData
+
+        // Get all accessible fields
+        const permitted = perms.flatMap(perm => perm.fields ?? [])
+        if (permitted == null) return newData
+
+        const result: Partial<Resources[Res]["data"]> = {}
+        for (const field of permitted) {
+          result[field] = newData[field]
+        }
+        return result
+      },
+      toDrizzleWhere<Res extends keyof Resources>(
+        resource: Res,
+        action: Resources[Res]["action"],
+      ) {
+        const conditions = permissions[resource]
+          .filter(perm => perm.action === action)
+          .map(perm => perm.condition)
+          .filter(cond => cond != null)
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const table: PgTableWithColumns<any> =
+          resource === "project" ? ProjectTable : DocumentTable
+
+        if (conditions.length === 0) return
+
+        return or(
+          ...conditions.map(cond => {
+            return and(
+              ...Object.entries(cond).map(([key, value]) => {
+                if (value === null) {
+                  return isNull(table[key])
+                }
+                return eq(table[key], value)
+              }),
+            )
+          }),
+        )
       },
     }
   }

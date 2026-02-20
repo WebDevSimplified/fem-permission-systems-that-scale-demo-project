@@ -23,6 +23,17 @@ export default async function DocumentDetailPage({
   if (document == null) return notFound()
 
   const permissions = await getUserPermissions()
+  const canReadField = {
+    creator: permissions.can("document", "read", document, "creatorId"),
+    lastEditedBy: permissions.can(
+      "document",
+      "read",
+      document,
+      "lastEditedById",
+    ),
+    createdAt: permissions.can("document", "read", document, "createdAt"),
+    updatedAt: permissions.can("document", "read", document, "updatedAt"),
+  }
 
   return (
     <div className="space-y-6">
@@ -77,35 +88,50 @@ export default async function DocumentDetailPage({
         {document.content}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Created by</span>
-              <p className="font-medium">{document.creator.name}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Last edited by</span>
-              <p className="font-medium">{document.lastEditedBy.name}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Created at</span>
-              <p className="font-medium">
-                {document.createdAt.toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Last updated</span>
-              <p className="font-medium">
-                {document.updatedAt.toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {canReadField.creator &&
+        canReadField.lastEditedBy &&
+        canReadField.createdAt &&
+        canReadField.updatedAt && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {canReadField.creator && (
+                  <div>
+                    <span className="text-muted-foreground">Created by</span>
+                    <p className="font-medium">{document.creator.name}</p>
+                  </div>
+                )}
+                {canReadField.lastEditedBy && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      Last edited by
+                    </span>
+                    <p className="font-medium">{document.lastEditedBy.name}</p>
+                  </div>
+                )}
+                {canReadField.createdAt && (
+                  <div>
+                    <span className="text-muted-foreground">Created at</span>
+                    <p className="font-medium">
+                      {document.createdAt.toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                {canReadField.updatedAt && (
+                  <div>
+                    <span className="text-muted-foreground">Last updated</span>
+                    <p className="font-medium">
+                      {document.updatedAt.toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
     </div>
   )
 }
