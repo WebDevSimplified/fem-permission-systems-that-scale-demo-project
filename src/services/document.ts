@@ -11,8 +11,8 @@ import {
 import { DocumentTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
+import { getUserPermissions } from "@/permissions/abac"
 import { canReadDocument, canUpdateDocument } from "@/permissions/documents"
-import { can } from "@/permissions/rbac"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
 import { eq, ne, or } from "drizzle-orm"
 
@@ -23,8 +23,10 @@ export async function createDocumentService(
   const user = await getCurrentUser()
   if (user == null) throw new Error("Unauthenticated")
 
+  const permissions = await getUserPermissions()
+
   // PERMISSION:
-  if (!can(user, "document:create")) {
+  if (!permissions.can("document", "create")) {
     throw new AuthorizationError()
   }
 
@@ -52,7 +54,8 @@ export async function updateDocumentService(
   }
 
   // PERMISSION:
-  if (!canUpdateDocument(user, document)) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("document", "update", document)) {
     throw new AuthorizationError()
   }
 
