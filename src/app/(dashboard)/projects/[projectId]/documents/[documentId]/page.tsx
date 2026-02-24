@@ -90,18 +90,22 @@ export default async function DocumentDetailPage({
               <span className="text-muted-foreground">Last edited by</span>
               <p className="font-medium">{document.lastEditedBy.name}</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Created at</span>
-              <p className="font-medium">
-                {document.createdAt.toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Last updated</span>
-              <p className="font-medium">
-                {document.updatedAt.toLocaleDateString()}
-              </p>
-            </div>
+            {permissions.can("document", "read", document, "createdAt") && (
+              <div>
+                <span className="text-muted-foreground">Created at</span>
+                <p className="font-medium">
+                  {document.createdAt.toLocaleDateString()}
+                </p>
+              </div>
+            )}
+            {permissions.can("document", "read", document, "updatedAt") && (
+              <div>
+                <span className="text-muted-foreground">Last updated</span>
+                <p className="font-medium">
+                  {document.updatedAt.toLocaleDateString()}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
