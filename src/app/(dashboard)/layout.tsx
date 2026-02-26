@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/">) {
 
   return (
     <SidebarProvider>
-      <AppSidebar projects={projects} />
+      <AppSidebar projects={projects} user={user} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="md:-ml-1" />
