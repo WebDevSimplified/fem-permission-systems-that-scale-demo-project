@@ -9,7 +9,8 @@ import { ArrowLeftIcon, LockIcon, PencilIcon } from "lucide-react"
 import { getStatusBadgeVariant } from "@/lib/helpers"
 import { getDocumentWithUserInfoService } from "@/services/document"
 import { getProjectByIdService } from "@/services/projects"
-import { getUserPermissions } from "@/permissions/abac"
+import { getUserPermissions } from "@/permissions/casl"
+import { subject } from "@casl/ability"
 
 export default async function DocumentDetailPage({
   params,
@@ -48,7 +49,7 @@ export default async function DocumentDetailPage({
         </div>
         <div className="flex gap-2">
           {/* PERMISSION: */}
-          {permissions.can("document", "update", document) && (
+          {permissions.can("update", subject("document", { ...document })) && (
             <Button variant="outline" asChild>
               <Link
                 href={`/projects/${projectId}/documents/${documentId}/edit`}
@@ -59,7 +60,7 @@ export default async function DocumentDetailPage({
             </Button>
           )}
           {/* PERMISSION: */}
-          {permissions.can("document", "delete", document) && (
+          {permissions.can("delete", subject("document", { ...document })) && (
             <ActionButton
               variant="destructive"
               requireAreYouSure
@@ -90,7 +91,11 @@ export default async function DocumentDetailPage({
               <span className="text-muted-foreground">Last edited by</span>
               <p className="font-medium">{document.lastEditedBy.name}</p>
             </div>
-            {permissions.can("document", "read", document, "createdAt") && (
+            {permissions.can(
+              "read",
+              subject("document", { ...document }),
+              "createdAt",
+            ) && (
               <div>
                 <span className="text-muted-foreground">Created at</span>
                 <p className="font-medium">
@@ -98,7 +103,11 @@ export default async function DocumentDetailPage({
                 </p>
               </div>
             )}
-            {permissions.can("document", "read", document, "updatedAt") && (
+            {permissions.can(
+              "read",
+              subject("document", { ...document }),
+              "updatedAt",
+            ) && (
               <div>
                 <span className="text-muted-foreground">Last updated</span>
                 <p className="font-medium">

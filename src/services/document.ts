@@ -8,10 +8,16 @@ import {
   getDocumentWithUserInfo,
   getProjectDocuments,
 } from "@/dal/documents/queries"
+import { DocumentTable } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { getUserPermissions } from "@/permissions/abac"
+import {
+  getUserPermissions,
+  pickPermittedFields,
+  toDrizzleWhere,
+} from "@/permissions/casl"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
+import { subject } from "@casl/ability"
 
 export async function createDocumentService(
   projectId: string,
@@ -21,11 +27,7 @@ export async function createDocumentService(
   if (user == null) throw new Error("Unauthenticated")
 
   const permissions = await getUserPermissions()
-  const restrictedData = permissions.pickPermittedFields(
-    "document",
-    "create",
-    data,
-  )
+  const restrictedData = await pickPermittedFields("create", "document", data)
 
   const result = documentSchema.safeParse(restrictedData)
   if (!result.success) throw new Error("Invalid data")
@@ -40,7 +42,7 @@ export async function createDocumentService(
   }
 
   // PERMISSION:
-  if (!permissions.can("document", "create", newDocument)) {
+  if (!permissions.can("create", subject("document", { ...newDocument }))) {
     throw new AuthorizationError()
   }
 
@@ -60,15 +62,14 @@ export async function updateDocumentService(
   }
 
   const permissions = await getUserPermissions()
-  const restrictedData = permissions.pickPermittedFields(
-    "document",
+  const restrictedData = await pickPermittedFields(
     "update",
+    subject("document", { ...document }),
     data,
-    document,
   )
 
   // PERMISSION:
-  if (!permissions.can("document", "update", document)) {
+  if (!permissions.can("update", subject("document", { ...document }))) {
     throw new AuthorizationError()
   }
 
@@ -90,7 +91,7 @@ export async function deleteDocumentService(documentId: string) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("document", "delete", document)) {
+  if (!permissions.can("delete", subject("document", { ...document }))) {
     throw new AuthorizationError()
   }
 
@@ -103,7 +104,7 @@ export async function getDocumentByIdService(id: string) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("document", "read", document)) {
+  if (!permissions.can("read", subject("document", { ...document }))) {
     return null
   }
 
@@ -113,13 +114,13 @@ export async function getDocumentByIdService(id: string) {
 export async function getProjectDocumentsService(projectId: string) {
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("document", "read")) {
+  if (!permissions.can("read", "document")) {
     return []
   }
 
   return getProjectDocuments(
     projectId,
-    permissions.toDrizzleWhere("document", "read"),
+    await toDrizzleWhere("read", "document", DocumentTable),
   )
 }
 
@@ -129,7 +130,7 @@ export async function getDocumentWithUserInfoService(id: string) {
 
   // PERMISSION:
   const permissions = await getUserPermissions()
-  if (!permissions.can("document", "read", document)) {
+  if (!permissions.can("read", subject("document", { ...document }))) {
     return null
   }
 
