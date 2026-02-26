@@ -7,8 +7,7 @@ import { getAllProjects, getProjectById } from "@/dal/projects/queries"
 import { ProjectTable, User } from "@/drizzle/schema"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
-import { canReadProject } from "@/permissions/projects"
-import { can } from "@/permissions/rbac"
+import { getUserPermissions } from "@/permissions/abac"
 import { ProjectFormValues, projectSchema } from "@/schemas/projects"
 import { eq, isNull, or } from "drizzle-orm"
 
@@ -16,30 +15,34 @@ export async function createProjectService(data: ProjectFormValues) {
   const user = await getCurrentUser()
   if (user == null) throw new Error("Unauthenticated")
 
-  // PERMISSION:
-  if (!can(user, "project:create")) {
-    throw new AuthorizationError()
-  }
-
   const result = projectSchema.safeParse(data)
   if (!result.success) throw new Error("Invalid data")
 
-  return createProject({
+  const newProject = {
     ...result.data,
     ownerId: user.id,
     department: result.data.department || null,
-  })
+  }
+
+  // PERMISSION:
+  const permissions = await getUserPermissions()
+  if (!permissions.can("project", "create", newProject)) {
+    throw new AuthorizationError()
+  }
+
+  return createProject(newProject)
 }
 
 export async function updateProjectService(
   projectId: string,
   data: ProjectFormValues,
 ) {
-  const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  const project = await getProjectById(projectId)
+  if (project == null) throw new Error("Not found")
 
   // PERMISSION:
-  if (!can(user, "project:update")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("project", "update", project)) {
     throw new AuthorizationError()
   }
 
@@ -50,11 +53,12 @@ export async function updateProjectService(
 }
 
 export async function deleteProjectService(projectId: string) {
-  const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  const project = await getProjectById(projectId)
+  if (project == null) throw new Error("Not found")
 
   // PERMISSION:
-  if (!can(user, "project:delete")) {
+  const permissions = await getUserPermissions()
+  if (!permissions.can("project", "delete", project)) {
     throw new AuthorizationError()
   }
 
@@ -66,20 +70,23 @@ export async function getAllProjectsService({ ordered } = { ordered: false }) {
   const user = await getCurrentUser()
   if (user == null) throw new AuthorizationError()
 
+  // PERMISSION:
+  const permissions = await getUserPermissions()
+  if (!permissions.can("project", "read")) {
+    return []
+  }
+
   return getAllProjects({ ordered }, userWhereClause(user))
 }
 
 export async function getProjectByIdService(id: string) {
-  // PERMISSION:
-  const user = await getCurrentUser()
-  if (user == null) throw new AuthorizationError()
-
   const project = await getProjectById(id)
   if (project == null) return null
 
   // PERMISSION:
-  if (!canReadProject(user, project)) {
-    return null
+  const permissions = await getUserPermissions()
+  if (!permissions.can("project", "read", project)) {
+    throw new AuthorizationError()
   }
 
   return project
