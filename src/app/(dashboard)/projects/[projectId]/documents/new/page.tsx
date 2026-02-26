@@ -36,7 +36,18 @@ export default async function NewDocumentPage({
       </div>
 
       <div className="max-w-2xl">
-        <DocumentForm projectId={projectId} />
+        <DocumentForm
+          projectId={projectId}
+          canModify={{
+            isLocked: permissions.can(
+              "document",
+              "create",
+              undefined,
+              "isLocked",
+            ),
+            status: permissions.can("document", "create", undefined, "status"),
+          }}
+        />
       </div>
     </div>
   )
