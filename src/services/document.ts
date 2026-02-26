@@ -10,6 +10,7 @@ import {
 } from "@/dal/documents/queries"
 import { AuthorizationError } from "@/lib/errors"
 import { getCurrentUser } from "@/lib/session"
+import { can } from "@/permissions/rbac"
 import { DocumentFormValues, documentSchema } from "@/schemas/documents"
 
 export async function createDocumentService(
@@ -20,7 +21,7 @@ export async function createDocumentService(
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role !== "author" && user.role !== "admin") {
+  if (!can(user, "document:create")) {
     throw new AuthorizationError()
   }
 
@@ -43,7 +44,7 @@ export async function updateDocumentService(
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role === "viewer") {
+  if (!can(user, "document:update")) {
     throw new AuthorizationError()
   }
 
@@ -61,7 +62,7 @@ export async function deleteDocumentService(documentId: string) {
   if (user == null) throw new Error("Unauthenticated")
 
   // PERMISSION:
-  if (user.role !== "admin") {
+  if (!can(user, "document:delete")) {
     throw new AuthorizationError()
   }
 
@@ -71,7 +72,9 @@ export async function deleteDocumentService(documentId: string) {
 export async function getDocumentByIdService(id: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  if (!can(user, "document:read")) {
+    throw new AuthorizationError()
+  }
 
   return getDocumentById(id)
 }
@@ -79,7 +82,9 @@ export async function getDocumentByIdService(id: string) {
 export async function getProjectDocumentsService(projectId: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  if (!can(user, "document:read")) {
+    throw new AuthorizationError()
+  }
 
   return getProjectDocuments(projectId)
 }
@@ -87,7 +92,9 @@ export async function getProjectDocumentsService(projectId: string) {
 export async function getDocumentWithUserInfoService(id: string) {
   // PERMISSION:
   const user = await getCurrentUser()
-  if (user == null) throw new Error("Unauthenticated")
+  if (!can(user, "document:read")) {
+    throw new AuthorizationError()
+  }
 
   return getDocumentWithUserInfo(id)
 }
