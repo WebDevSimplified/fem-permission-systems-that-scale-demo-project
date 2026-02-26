@@ -9,8 +9,10 @@ This project is broken down into different phases which correspond to specific G
 - `1-basic-permissions`
 - `2-fix-basic-permission-errors`
 - `3-add-service-layer`
+- `3.5-basic-rbac-checkpoint`
 - `4-basic-rbac`
 - `5-rbac-limits`
+- `5.5-basic-abac-checkpoint`
 - `6-basic-abac`
 - `7-advanced-abac`
 - `8-casl`
